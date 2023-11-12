@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres:12
+    environment:
+      - POSTGRES_DB=medplumdemo
+      - POSTGRES_USER=medplum
+      - POSTGRES_PASSWORD=medplum
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+  redis:
+    image: redis:6
+    command: redis-server --requirepass medplum
+  server:
+    image: medplum/medplum-server:2.1.7
+    ports:
+      - 8103:8103
+
+  ui:
+    build: app/
+    ports:
+      - 3000:3000
+    depends_on:
+      - server
