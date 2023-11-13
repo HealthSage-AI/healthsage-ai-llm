@@ -1,4 +1,4 @@
-# HealthSage LLM - from clinical note to FHIR
+# HealthSage AI LLM - from clinical note to FHIR
 
 ## Introduction
 
