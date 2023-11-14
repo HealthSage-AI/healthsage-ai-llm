@@ -2,7 +2,7 @@
 
 ## Introduction
 
-HealthSage LLM is a fine-tuned version of Meta's Llama 2 13B to create structured information - FHIR Resources - from
+HealthSage AI LLM is a fine-tuned version of Meta's Llama 2 13B to create structured information - FHIR Resources - from
 unstructured clinical notes - plain text.
 
 It leverages the synthetic patient data generator [Synthea](https://synthetichealth.github.io/synthea/) to generate
@@ -46,7 +46,7 @@ The inference API is pushed as a Docker image to Docker Hub.
 
 ### Licensing
 
-The code has been made available under the AGPL 3.0 license. Contact HealthSage for commercial licensing options.
+The code has been made available under the AGPL 3.0 license. Contact HealthSage AI (info@healthsage.ai) for commercial licensing options.
 
 ### Contributing
 
