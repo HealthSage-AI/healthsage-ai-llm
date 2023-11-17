@@ -55,3 +55,6 @@ Contributions are welcome in any form! Please open an issue or a pull request.
 ### Validation
 
 A validation report for our latest model is available here: TODO.
+
+### Future updates
+The current version of the model is tested for English. In future updates we will support additional languages, FHIR resources, and terminologies.
