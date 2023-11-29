@@ -38,7 +38,7 @@ Lastly, you could fine-tune the model on your own data by modifying the training
 
 ## Published resources
 
-The data sets and models are regularly published to [HuggingFace](https://huggingface.co/healthsage).
+The data sets and models are regularly published to [HuggingFace](https://huggingface.co/healthsageai).
 The inference API is pushed as a Docker image to Docker Hub.
 
 ## Licensing
