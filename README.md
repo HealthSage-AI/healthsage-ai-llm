@@ -2,11 +2,8 @@
 
 ## Introduction
 
-HealthSage AI LLM is a fine-tuned version of Meta's Llama 2 13B to create structured information - FHIR Resources - from
+HealthSage AI's LLM is a fine-tuned version of Meta's Llama 2 13B to create structured information - FHIR Resources - from
 unstructured clinical notes - plain text.
-
-It leverages the synthetic patient data generator [Synthea](https://synthetichealth.github.io/synthea/) to generate
-the clinical notes as well as the paired FHIR Resources. Other datasets are in the works.
 
 The following FHIR R4 Resources are currently supported and validated:
 
@@ -41,22 +38,22 @@ Lastly, you could fine-tune the model on your own data by modifying the training
 
 ## Published resources
 
-The data sets and models are regularly published to HuggingFace [HuggingFace](https://huggingface.co/healthsage).
+The data sets and models are regularly published to [HuggingFace](https://huggingface.co/healthsage).
 The inference API is pushed as a Docker image to Docker Hub.
 
-### Licensing
+## Licensing
 
 The code has been made available under the AGPL 3.0 license. Contact HealthSage AI (info@healthsage.ai) for commercial licensing options.
 
-### Contributing
+## Contributing
 
 Contributions are welcome in any form! Please open an issue or a pull request.
 
-### Validation
+## Validation
 
 A validation report for our latest model is available here: TODO.
 
 The current version of the Note-to-FHIR model is for testing and development purposes only. Its not validated for clinical use. 
 
-### Future updates
+## Future updates
 The current version is tested for English. In future updates we will support additional languages, FHIR resources, and terminologies.
