@@ -43,7 +43,7 @@ The inference API is pushed as a Docker image to Docker Hub.
 
 ## Licensing
 
-The code has been made available under the AGPL 3.0 license. Contact HealthSage AI (info@healthsage.ai) for commercial licensing options.
+The code has been made available under the AGPL 3.0 license. Contact HealthSage AI (hello@healthsage.ai) for commercial licensing options.
 
 ## Contributing
 
