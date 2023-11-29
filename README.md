@@ -41,7 +41,7 @@ Lastly, you could fine-tune the model on your own data by modifying the training
 
 ## Published resources
 
-The data sets and models are regularly published to HuggingFace.
+The data sets and models are regularly published to HuggingFace [HuggingFace](https://huggingface.co/healthsage).
 The inference API is pushed as a Docker image to Docker Hub.
 
 ### Licensing
@@ -56,5 +56,7 @@ Contributions are welcome in any form! Please open an issue or a pull request.
 
 A validation report for our latest model is available here: TODO.
 
+The current version of the Note-to-FHIR model is for testing and development purposes only. Its not validated for clinical use. 
+
 ### Future updates
-The current version of the model is tested for English. In future updates we will support additional languages, FHIR resources, and terminologies.
+The current version is tested for English. In future updates we will support additional languages, FHIR resources, and terminologies.
