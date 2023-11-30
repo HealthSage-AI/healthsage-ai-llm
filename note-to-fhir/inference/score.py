@@ -43,8 +43,10 @@ CLINICAL NOTE
 [/INST]
 """
 
+
 def model_path(name: str) -> str:
     return os.path.join(os.getenv("AZUREML_MODEL_DIR"), "models", name)
+
 
 def init():
     global generator
