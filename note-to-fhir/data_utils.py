@@ -65,6 +65,12 @@ def clean_fhir_resource(fhir: dict) -> dict:
     return {key: remove_snomed_loinc_code_for_coding(key, val) for (key, val) in drop_nones(fhir).items()}
 
 
+def filter_supported_fhir_resources(resources: list[dict]) -> list[dict]:
+    return [res for res in resources if
+            res['resourceType'] in ['Observation', 'Condition', 'Procedure', 'Encounter', 'Patient', 'Organization',
+                                    'Location', 'Practitioner', 'Immunization', 'AllergyIntolerance']]
+
+
 def drop_nones(d: dict) -> dict:
     """Recursively drop Nones in dict d and return a new dict"""
     dd = {}
