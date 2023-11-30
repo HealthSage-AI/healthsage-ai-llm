@@ -50,9 +50,6 @@ The code has been made available under the AGPL 3.0 license. Contact HealthSage 
 Contributions are welcome in any form! Please open an issue or a pull request.
 
 ## Validation
-
-A validation report for our latest model is available here: TODO.
-
 The current version of the Note-to-FHIR model is for testing and development purposes only. Its not validated for clinical use. 
 
 ## Future updates
