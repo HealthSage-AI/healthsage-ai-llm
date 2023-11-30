@@ -18,7 +18,7 @@ This repository consists of the following modules:
 
 The easiest way to get started is run one of the Jupyter Notebooks on Google Colab and other services, e.g. for inference:
 
-- ./inference/healthsage-llm-13b.ipynb
+- inference-note-to-fhir-colab-notebook.ipynb
 
 A second step could be to deploy the starter kit for an end to end demo of the system: `docker compose -p starter-kit up`.
 A decent GPU is required for this step.
