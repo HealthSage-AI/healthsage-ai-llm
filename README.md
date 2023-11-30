@@ -8,24 +8,25 @@ unstructured clinical notes - plain text.
 It leverages the synthetic patient data generator [Synthea](https://synthetichealth.github.io/synthea/) to generate
 the clinical notes as well as the paired FHIR Resources. Other datasets are in the works.
 
-The following FHIR R4 Resources are currently supported and validated:
+The following FHIR R4 Resources are currently
+supported and validated:
 
-Patient
-Encounter
-Organization
-Location
-Practitioner
-Condition
-Procedure
-Observation
-AllergyIntolerance
-Immunization
+* Patient
+* Encounter
+* Organization
+* Location
+* Practitioner
+* Condition
+* Procedure
+* Observation
+* AllergyIntolerance
+* Immunization
 
 ## Getting started
 
 This repository consists of the following modules:
 
-- training_evaluation - all scripts that have been used to train the model and specifically validate the FHIR Resource
+- training / evaluation - all scripts that have been used to train the model and specifically validate the FHIR Resource
   validity.
 - inference - running inference on the model, either locally or in a containerized environment.
 - demo - a simple demo of the system, using a docker-compose setup.
