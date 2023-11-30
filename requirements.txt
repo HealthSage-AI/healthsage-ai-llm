@@ -1,0 +1,19 @@
+# training and evaluation
+fhir.resources
+pandas
+transformers
+datasets
+jupyter
+scikit-learn
+openai==0.28
+matplotlib
+
+# training and inference
+torch
+pytorch-gpu
+python-dotenv
+
+# demo
+requests
+requests-toolbelt
+marko
