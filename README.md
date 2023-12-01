@@ -12,7 +12,7 @@ The model is optimized to process English notes and populate 10 FHIR resource ty
 This repository consists of the following modules:
 
 - training - all scripts that have been used to train the model.
-- evaluation - specifically validate the FHIR Resource validity.
+- evaluation - specifically validate the FHIR Resources for adherence to the FHIR specification.
 - inference - running inference on the model, either locally or in a containerized environment.
 - demo - a simple demo of the system, using a docker-compose setup.
 
