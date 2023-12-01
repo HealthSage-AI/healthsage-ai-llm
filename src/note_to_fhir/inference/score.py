@@ -17,32 +17,10 @@ from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer
 import torch
 import json
 import os
+from templates.simple import llama_template as template
 
 MODEL_NAME = "meta-llama/Llama-2-13b-chat-hf"
-ADAPTER_NAME = "healthsage/note-to-fhir-13b-dev"
-
-template = """[INST] <<SYS>>
-INSTRUCTION
-Translate the following clinical note into HL7 FHIR R4 Format. 
-- Do not insert any values that are not in the note. 
-- Do not infer or impute any values
-- Only include information that is essential:
-    - information that is in the clinical note
-    - information that is mandatory for a valid FHIR resource.
-
-OUTPUT FORMAT
-Return the HL7 FHIR structured information as a json string. denote the start and end of the json with a markdown codeblock:
-```json 
-[RESOURCE HERE]
-```
-<</SYS>>
-
-CLINICAL NOTE
-{note}
-
-[/INST]
-"""
-
+ADAPTER_NAME = "healthsageai/note-to-fhir-13b-adapter"
 
 def model_path(name: str) -> str:
     return os.path.join(os.getenv("AZUREML_MODEL_DIR"), "models", name)
@@ -76,7 +54,7 @@ def init():
         model=model, 
         tokenizer=tokenizer,
         task="text-generation",
-        temperature = 1e-9,
+        do_sample=True,
         eos_token_id=model.config.eos_token_id,
         max_length=4096
     )

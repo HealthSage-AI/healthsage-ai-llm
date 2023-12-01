@@ -13,45 +13,6 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import base64
-
-
-def subject_reference_mapper(resource):
-    return resource['subject']['reference']
-
-
-def generate_patient_id_fhir_resource_mapping(ndjson_reader, mapper=subject_reference_mapper):
-    patient_id_mapping = {}
-    for fhir_resource in ndjson_reader:
-        patient_id = f"{mapper(fhir_resource)}"
-        patient_id_mapping[patient_id] = fhir_resource
-    return patient_id_mapping
-
-
-def generate_onetomany_patient_id_fhir_resource_mapping(ndjson_reader, mapper=subject_reference_mapper):
-    patient_id_mapping = {}
-    for fhir_resource in ndjson_reader:
-        patient_id = f"{mapper(fhir_resource)}"
-        patient_id_mapping.setdefault(patient_id, []).append(fhir_resource)
-    return patient_id_mapping
-
-
-def generate_clinical_notes(ndjson_reader, limit=None):
-    reports = {}
-    for i, diagnostic_report in enumerate(ndjson_reader):
-        patient_id = diagnostic_report['subject']['reference']
-        presented_form = diagnostic_report.get('presentedForm')
-        if presented_form:
-            decode = base64.b64decode(
-                presented_form[0]["data"]).decode('utf-8')
-            parts = [part for part in decode.split(
-                '\n') if part != '' and not part.startswith('#')]
-            report_str = '\n'.join(parts)
-            reports[patient_id] = report_str
-        if i + 1 == limit:
-            break
-    return reports
-
 
 def remove_snomed_loinc_code_for_coding(key, val):
     if key == 'code' and isinstance(val['coding'], list):
