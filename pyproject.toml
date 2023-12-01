@@ -49,10 +49,8 @@ demo = ['requests']
 "Bug Reports" = "https://github.com/healthsageai/healthsageai-note-to-fhir/issues"
 "Source" = "https://github.com/healthsageai/healthsageai-note-to-fhir/"
 
-# The following would provide a command line executable called `sample`
-# which executes the function `main` from this package when invoked.
-[project.scripts]  # Optional
-sample = "sample:main"
+[project.scripts]
+sample = "note_to_fhir.evaluation.run_evaluation:main"
 
 [tool.setuptools]
 
