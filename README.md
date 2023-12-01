@@ -11,8 +11,8 @@ The model is optimized to process English notes and populate 10 FHIR resource ty
 
 This repository consists of the following modules:
 
-- training_evaluation - all scripts that have been used to train the model and specifically validate the FHIR Resource
-  validity.
+- training - all scripts that have been used to train the model.
+- evaluation - specifically validate the FHIR Resource validity.
 - inference - running inference on the model, either locally or in a containerized environment.
 - demo - a simple demo of the system, using a docker-compose setup.
 
@@ -20,7 +20,7 @@ The easiest way to get started is to run one of the Jupyter Notebooks on Google 
 
 - inference-note-to-fhir-colab-notebook.ipynb
 
-A second step could be to deploy the starter kit for an end to end demo of the system: `docker compose -p starter-kit up`.
+A second step could be to deploy the starter kit for an end to end demo of the system: `docker compose -p demo up`.
 A decent GPU is required for this step.
 
 Lastly, you could fine-tune the model on your own data by modifying the training scripts and running them on a GPU.
