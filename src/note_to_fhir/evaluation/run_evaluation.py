@@ -13,10 +13,10 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from measures import ResourceBundleDistance, ResourceDistance
+from .measures import ResourceBundleDistance
 import matplotlib.pyplot as plt
 from datasets import load_dataset
-from measures import validate_resource, resource_mapping
+from .measures import validate_resource, resource_mapping
 
 import json
 import pandas as pd
@@ -137,7 +137,6 @@ score_per_resource_source = score_per_resource_source[score_per_resource_source.
 plt.figure()
 score_per_resource_source.plot(kind='bar', title="Syntax Validity per Resource Type")
 plt.show()
-
 
 
 

@@ -16,7 +16,7 @@
 import json
 import pandas as pd
 import warnings
-from fhirmodels import assessmentmodel_mapping
+from .fhirmodels import assessmentmodel_mapping
 from fhir.resources.R4B.patient import Patient
 from fhir.resources.R4B.encounter import Encounter
 from fhir.resources.R4B.organization import Organization

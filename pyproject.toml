@@ -42,7 +42,7 @@ dependencies = [
 [project.optional-dependencies]
 training = ['torch', 'pytorch-gpu']
 inference = []
-demo = ['requests']
+demo = ['requests', 'gradio']
 
 [project.urls]
 "Homepage" = "https://github.com/healthsageai/healthsageai-note-to-fhir"
@@ -50,7 +50,7 @@ demo = ['requests']
 "Source" = "https://github.com/healthsageai/healthsageai-note-to-fhir/"
 
 [project.scripts]
-sample = "note_to_fhir.evaluation.run_evaluation:main"
+run_evaluation = "note_to_fhir.evaluation.run_evaluation:main"
 
 [tool.setuptools]
 
