@@ -13,10 +13,10 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .measures import ResourceBundleDistance
+from note_to_fhir.evaluation.measures import ResourceBundleDistance
 import matplotlib.pyplot as plt
 from datasets import load_dataset
-from .measures import validate_resource, resource_mapping
+from note_to_fhir.evaluation.measures import validate_resource, resource_mapping
 
 import json
 import pandas as pd
@@ -104,39 +104,41 @@ def report_syntax_score(bundles):
                 syntax_scores.append(["unknown", False])
     return syntax_scores
 
-    
-accs, dists = compare(gpt4_compare['fhir_true'].tolist(), gpt4_compare['gpt4'].tolist())
-_, dists_sage = compare(fhirsage_compare['fhir_true'].tolist(), fhirsage_compare['fhirsage'].tolist())
+def main():
+    accs, dists = compare(gpt4_compare['fhir_true'].tolist(), gpt4_compare['gpt4'].tolist())
+    _, dists_sage = compare(fhirsage_compare['fhir_true'].tolist(), fhirsage_compare['fhirsage'].tolist())
 
-final_comparison = pd.concat([report_distances(dists), report_distances(dists_sage)], axis=1)
-final_comparison.columns = ['gpt4', 'fhirsage']
-final_comparison = final_comparison.sort_values(by='fhirsage', ascending=False)
-final_comparison.plot(kind='bar')
+    final_comparison = pd.concat([report_distances(dists), report_distances(dists_sage)], axis=1)
+    final_comparison.columns = ['gpt4', 'fhirsage']
+    final_comparison = final_comparison.sort_values(by='fhirsage', ascending=False)
+    final_comparison.plot(kind='bar')
 
-syntax_scores_sage = report_syntax_score(fhirsage_compare['fhirsage'].tolist())
-syntax_scores_gpt4 = report_syntax_score(gpt4_compare['gpt4'].tolist())
-syntax_scores_synth = report_syntax_score(gpt4_compare['fhir_true'].tolist())
+    syntax_scores_sage = report_syntax_score(fhirsage_compare['fhirsage'].tolist())
+    syntax_scores_gpt4 = report_syntax_score(gpt4_compare['gpt4'].tolist())
+    syntax_scores_synth = report_syntax_score(gpt4_compare['fhir_true'].tolist())
 
-syntax_scores_sage = pd.DataFrame(syntax_scores_sage, columns=['resource_type', 'syntax_validity'])
-syntax_scores_sage['source'] = 'fhirsage'
-syntax_scores_gpt4 = pd.DataFrame(syntax_scores_gpt4, columns=['resource_type', 'syntax_validity'])
-syntax_scores_gpt4['source'] = 'gpt4'
-syntax_scores_synth = pd.DataFrame(syntax_scores_synth, columns=['resource_type', 'syntax_validity'])
-syntax_scores_synth['source'] = 'synthea'
+    syntax_scores_sage = pd.DataFrame(syntax_scores_sage, columns=['resource_type', 'syntax_validity'])
+    syntax_scores_sage['source'] = 'fhirsage'
+    syntax_scores_gpt4 = pd.DataFrame(syntax_scores_gpt4, columns=['resource_type', 'syntax_validity'])
+    syntax_scores_gpt4['source'] = 'gpt4'
+    syntax_scores_synth = pd.DataFrame(syntax_scores_synth, columns=['resource_type', 'syntax_validity'])
+    syntax_scores_synth['source'] = 'synthea'
 
-syntax_scores_both = pd.concat([syntax_scores_sage, syntax_scores_gpt4,syntax_scores_synth], axis=0)
+    syntax_scores_both = pd.concat([syntax_scores_sage, syntax_scores_gpt4,syntax_scores_synth], axis=0)
 
-score_per_source = syntax_scores_both[["source","syntax_validity"]].groupby("source").mean()
-plt.figure()
-score_per_source.plot(kind='bar', title="Syntax Validity per LLM")
-plt.show()
+    score_per_source = syntax_scores_both[["source","syntax_validity"]].groupby("source").mean()
+    plt.figure()
+    score_per_source.plot(kind='bar', title="Syntax Validity per LLM")
+    plt.show()
 
-score_per_resource_source = syntax_scores_both.pivot_table(index="resource_type", columns="source",aggfunc="mean")
-score_per_resource_source = score_per_resource_source[score_per_resource_source.index.isin(resource_mapping.keys())]
+    score_per_resource_source = syntax_scores_both.pivot_table(index="resource_type", columns="source",aggfunc="mean")
+    score_per_resource_source = score_per_resource_source[score_per_resource_source.index.isin(resource_mapping.keys())]
 
-plt.figure()
-score_per_resource_source.plot(kind='bar', title="Syntax Validity per Resource Type")
-plt.show()
+    plt.figure()
+    score_per_resource_source.plot(kind='bar', title="Syntax Validity per Resource Type")
+    plt.show()
 
 
+if __name__ == "__main__":
+    main()
 
