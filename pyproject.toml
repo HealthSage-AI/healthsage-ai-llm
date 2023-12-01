@@ -1,0 +1,65 @@
+[project]
+name = "healthsageai_note-to-fhir"
+version = "0.1"
+description = "HealthSage AI LLM - from clinical note to FHIR"
+readme = "README.md"
+
+requires-python = ">=3.9"
+
+license = {file = "LICENSE"}
+
+keywords = ["NLP", "machine learning", "pytorch", "fhir"]
+
+authors = [
+  {name = "HealthSage AI", email = "hello@healthsage.ai" }
+]
+
+maintainers = [
+  {name = "HealthSage AI", email = "hello@healthsage.ai" }
+]
+
+classifiers = [  # Optional
+  "Development Status :: 3 - Alpha",
+
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+
+  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = [
+  # use dependency groups below
+]
+
+#   $ pip install healthsageai-note-to-fhir[training]
+#   $ pip install healthsageai-note-to-fhir[inference]
+[project.optional-dependencies]
+training = ['torch', 'pytorch-gpu']
+inference = []
+demo = ['requests']
+
+[project.urls]
+"Homepage" = "https://github.com/healthsageai/healthsageai-note-to-fhir"
+"Bug Reports" = "https://github.com/healthsageai/healthsageai-note-to-fhir/issues"
+"Source" = "https://github.com/healthsageai/healthsageai-note-to-fhir/"
+
+# The following would provide a command line executable called `sample`
+# which executes the function `main` from this package when invoked.
+[project.scripts]  # Optional
+sample = "sample:main"
+
+[tool.setuptools]
+
+package-data = {}
+
+[build-system]
+# These are the assumed default build requirements from pip:
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
