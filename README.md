@@ -18,7 +18,7 @@ This repository consists of the following modules:
 
 The easiest way to get started is to run one of the Jupyter Notebooks on Google Colab and other services, e.g. for inference:
 
-- inference-note-to-fhir-colab-notebook.ipynb
+[![Open inference-note-to-fhir-colab-notebook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/healthsage-ai/healthsage-ai-llm/blob/main/inference-note-to-fhir-colab-notebook.ipynb)
 
 A second step could be to deploy the starter kit for an end to end demo of the system: `docker compose -p demo up`.
 A decent GPU is required for this step.
