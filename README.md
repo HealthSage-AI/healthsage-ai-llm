@@ -34,9 +34,9 @@ The inference API is pushed as a Docker image to Docker Hub.
 
 The code has been made available under the GNU AGPL 3.0 license. Contact HealthSage AI (hello@healthsage.ai) for commercial licensing options.
 
-## Contributing
+## Contributing & support
 
-Contributions are welcome in any form! Please open an issue or a pull request.
+Contributions are welcome in any form! Please open an issue or a pull request. For support and discussions please visit our [Github discussions](https://github.com/HealthSage-AI/healthsage-ai-llm/discussions) or [Slack community](https://healthsageaicommunity.slack.com/).
 
 ## Validation
 The current version of the Note-to-FHIR model is released as Beta for testing and development purposes only. Its not validated for clinical use. 
