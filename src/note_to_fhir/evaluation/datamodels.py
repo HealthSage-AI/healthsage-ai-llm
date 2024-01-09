@@ -13,39 +13,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import json
-from evaluation.dataclasses import Patient, Encounter, Organization, Practitioner, Procedure, Condition, AllergyIntolerance, Immunization, Observation
+from abc import ABCMeta
 from pydantic import BaseModel, computed_field
-
-resource_mapping = {
-    "Patient": Patient,
-    "Condition": Condition,
-    "Encounter": Encounter,
-    "Organization": Organization,
-    "Practitioner": Practitioner,
-    "Procedure": Procedure,
-    "AllergyIntolerance": AllergyIntolerance,
-    "Immunization": Immunization,
-    "Observation": Observation
-}
-
-def validate_resource(resource: dict) -> bool:
-    assert "resourceType" in resource.keys(), "resourceType unspecified"
-    try:
-        ResourceClass = resource_mapping[resource['resourceType']]
-        resource = ResourceClass.parse_raw(json.dumps(resource))
-        return True
-    except:
-        return False
-    
-def fhirtype_is_struct(fhirtype: str) -> bool:
-    return fhirtype[0] != fhirtype[0].lower()
-
-def fhirtype_is_array(fhirtype) -> bool:
-    return fhirtype == 'array'
-
-def fhirtype_is_leaf(fhirtype) -> bool:
-    return fhirtype in ["boolean", "integer", "string", "decimal"]
+from typing import Any, Optional
 
 class FhirScore(BaseModel):
 
@@ -54,6 +24,7 @@ class FhirScore(BaseModel):
     n_deletions: int = 0  #  The number of missing leaf nodes, a.k.a. "False Negatives"
     n_modifications: int = 0  # The number of changes leaf nodes a.k.a. "Mistakes"
     n_matches: int = 0  # The number of identical leaf nodes, a.k.a. "True Positives"
+    n_valid: int = 0
     
     @computed_field
     @property
@@ -75,4 +46,43 @@ class FhirScore(BaseModel):
                          n_additions=self.n_additions + other.n_additions,
                          n_deletions=self.n_deletions + other.n_deletions,
                          n_modifications=self.n_modifications + other.n_modifications,
-                         n_matches=self.n_matches+other.n_matches)
+                         n_matches=self.n_matches+other.n_matches,
+                         n_valid=self.n_valid + other.n_valid)
+    
+    
+class ElementDetails(BaseModel):
+    
+    key: str
+    fhirtype: str
+    required: bool
+    is_leaf: bool
+    is_array: bool
+    is_struct: bool
+    array_item_type: Optional[str]
+
+    
+class FhirDiff(BaseModel):
+
+    fhir_true: Any
+    fhir_pred: Any
+    resource_name: str # resource type or fhir type 
+    parent: 'FhirDiff' = None
+    children: dict = {}
+    entry_nr: str = ""  # For lists, tracking index
+    key: str = ""  # What the element is named in its parent object
+    score: FhirScore = FhirScore()
+
+    @computed_field
+    @property
+    def label(self) -> str:
+        parent_label = "" if not self.parent else self.parent.label + "."
+        entry_nr_label = "" if not self.entry_nr else "_" + str(self.entry_nr)
+        return parent_label + self.resource_type + entry_nr_label
+    
+    @computed_field
+    @property
+    def resource_type(self) -> str:
+        if isinstance(self.fhir_true, dict):
+            if self.fhir_true["resourceType"]:
+                return self.fhir_true["resourceType"]
+        return self.resource_name

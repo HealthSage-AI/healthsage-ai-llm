@@ -14,18 +14,13 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
-from fhir.resources.R4B.patient import Patient
-from fhir.resources.R4B.encounter import Encounter
-from fhir.resources.R4B.organization import Organization
-from fhir.resources.R4B.practitioner import Practitioner
-from fhir.resources.R4B.procedure import Procedure
-from fhir.resources.R4B.condition import Condition
-from fhir.resources.R4B.allergyintolerance import AllergyIntolerance
-from fhir.resources.R4B.immunization import Immunization
-from fhir.resources.R4B.observation import Observation
-from evaluation.dataclasses import FhirScore, ElementDetails, FhirDiff
+from src.note_to_fhir.evaluation.datamodels import FhirScore, ElementDetails, FhirDiff
+from src.note_to_fhir.evaluation.fhirmodels import *
+
 from typing import List
 import warnings
+import plotly.graph_objects as go
+from collections import defaultdict
 
 resource_mapping = {
     "Patient": Patient,
@@ -66,7 +61,7 @@ def get_resource_details(Resource) -> List[ElementDetails]:
         if fhirtype == 'array':
             array_item_type = spec['items']['type']
 
-        element_details = ElementDetails(name=name,
+        element_details = ElementDetails(key=name,
                                         fhirtype=fhirtype,
                                         required=required,
                                         is_leaf=fhirtype_is_leaf(fhirtype),
@@ -76,9 +71,9 @@ def get_resource_details(Resource) -> List[ElementDetails]:
                                         )
 
             
-        element_details.append(resource_details)
+        resource_details.append(element_details)
             
-    return element_details
+    return resource_details
 
 def match_list_len(list_1: list, list_2: list) -> tuple:
     """Iteratively appends None to shortest list untill it matches longest list
@@ -163,8 +158,29 @@ def map_align_arrays(arr1, arr2):
     Returns:
         arr1, arr2: Where arr1[i] corresponds to arr2[i]
     """
-    warnings.warn(f"Notimplemented; arrays are assumed to be in identical order.")
+    warnings.warn(f"NotImplemented; arrays are assumed to be in identical order.")
     return match_list_len(arr1, arr2)
+
+def convert_to_defaultdict(obj) -> defaultdict:
+    if type(obj) == dict or obj == None:
+        return defaultdict(dict, obj) if obj else defaultdict(dict)
+    else:
+        return obj
+    
+def get_resource_type(resource, resource_name) -> str:
+    """Determine the resource type of a resource
+
+    Args:
+        resource (Any): The FHIR resource, can be any datatype.
+
+    Returns:
+        str: string representation of the resource type
+    """
+    if isinstance(resource, dict):
+        if resource['resourceType']:
+            return resource['resourceType']
+    return resource_name
+
 
 def calculate_diff(diff: FhirDiff) -> FhirDiff:
     """Process FhirDiff to calculate FhirDiff.fhirscore
@@ -175,8 +191,14 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
     Returns:
         FhirComparison: comparison with fhirscore attribute calculated.
     """
-    resource_name = diff.resource_name
-    Resource = eval(resource_name)
+    resource_type = get_resource_type(diff.fhir_true, diff.resource_name)
+
+    if fhirtype_is_leaf(resource_type):
+        diff.score = compare_leaf(diff.fhir_true, diff.fhir_pred)
+        return diff
+
+    Resource = eval(resource_type)
+
     resource_details = get_resource_details(Resource)
     for element_details in resource_details:
 
@@ -187,10 +209,11 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
             continue
 
         # If the element is a struct (dictionary) with arbitrary depth, handle recursively
+        fhir_true_child, fhir_pred_child = convert_to_defaultdict(diff.fhir_true[element_details.key]), convert_to_defaultdict(diff.fhir_pred[element_details.key])
         if element_details.is_struct:
-            childdiff = FhirDiff(diff.fhir_true[element_details.key],
-                                 diff.fhir_pred[element_details.key],
-                                 element_details.fhirtype,
+            childdiff = FhirDiff(fhir_true=fhir_true_child,
+                                 fhir_pred=fhir_pred_child,
+                                 resource_name=element_details.fhirtype,
                                  parent=diff,
                                  key=element_details.key
                                  )
@@ -200,43 +223,43 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
 
         # If the element is an array, handle recursively on each array item
         elif element_details.is_array:
+            diff.children[element_details.key] = []
             fhir_true_child, fhir_pred_child = match_list_len(diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key])
+
             i=1
             childscore = FhirScore()
             for fhir_true_child_item, fhir_pred_child_item in zip(fhir_true_child, fhir_pred_child):
-                i+=1
-                childdiff_item = FhirDiff(fhir_true_child_item,
-                                          fhir_pred_child_item,
+                fhir_pred_child_item = convert_to_defaultdict(fhir_pred_child_item)
+                fhir_true_child_item = convert_to_defaultdict(fhir_true_child_item)
+                childdiff_item = FhirDiff(fhir_true=fhir_true_child_item,
+                                          fhir_pred=fhir_pred_child_item,
                                           resource_name=element_details.array_item_type,
                                           parent=diff,
                                           entry_nr=str(i),
                                           key=element_details.key)
                 childdiff_item = calculate_diff(childdiff_item)
+                diff.children[element_details.key].append(childdiff_item)
                 childscore = childscore + childdiff_item.score
+                i+=1
 
-        # If the element is a leaf (terminal) node, calculate the final score
+        # If the element is a leaf, calculate the score directly
+        elif element_details.is_leaf:
+            childdiff = FhirDiff(fhir_true = diff.fhir_true[element_details.key],
+                                 fhir_pred = diff.fhir_pred[element_details.key],
+                                 resource_name=element_details.fhirtype,
+                                 parent=diff,
+                                 key=element_details.key
+                                 )
+            childscore = compare_leaf(diff.fhir_true[element_details.key],
+                                 diff.fhir_pred[element_details.key]
+                                 )
+            childdiff.score = childscore
+            diff.children[element_details.key] = childdiff
 
-
-
+        # Add the child node score to the current score
         diff.score = diff.score + childscore
-
-
-
-
-
-
-
-
-
-def process_comparison_leaf(comparison: FhirDiff) -> FhirDiff:
-    """Process leaf node of a comparison
-
-    Args:
-        comparison (FhirComparison): _description_
-
-    Returns:
-        FhirComparison: comparison with fhirscore attribute calculated.
-    """
+    
+    return diff
 
 def compare_leaf(element_true: any, element_pred: any) -> FhirScore:
     """Compares two leaf nodes of a FHIR structure
@@ -250,48 +273,11 @@ def compare_leaf(element_true: any, element_pred: any) -> FhirScore:
     """
     assert not (element_pred is None and element_true is None), "Element can't both be None for comparison"
     if not element_pred:
-        fhirscore = FhirScore(n_deletions=1, n_leaves=1)  # a.k.a. missing prediction
+        fhirscore = FhirScore(n_deletions=1, n_leaves=1)  # miss
     elif not element_true:
-        fhirscore = FhirScore(n_additions=1, n_leaves=1)  # a.k.a. hallucination
+        fhirscore = FhirScore(n_additions=1, n_leaves=1)  # hallucination
     elif element_true != element_pred:
-        fhirscore = FhirScore(n_modifications=1, n_leaves=1)  # a.k.a. mistake
+        fhirscore = FhirScore(n_modifications=1, n_leaves=1)  # mistake
     elif element_true == element_pred:
-        fhirscore = FhirScore(n_matches=1, n_leaves=1)  # a.k.a. correct
+        fhirscore = FhirScore(n_matches=1, n_leaves=1)  # correct
     return fhirscore
-
-def preprocess_for_treemap(comparison: FhirDiff):
-    """Flattens a nested comparison object for plotly treemaps
-
-    Args:
-        comparison (FhirComparison): FhirComparison object
-
-    Returns:
-        (labels, parents, values):
-            - labels define the "name" of the node
-            - parents define the parent label
-            - values or the content of the treemap 
-    """
-
-    # Current Node
-    labels = [comparison.label]
-    parents = [comparison.parent.label] if comparison.parent else [""]
-    values = [comparison]
-
-    if not comparison.children:
-        return labels, parents, values
-    
-    for child_comparison in comparison.children.values():
-        if type(child_comparison) == list:
-            for child_comparison_item in child_comparison:
-                new_labels, new_parents, new_values = preprocess_for_treemap(child_comparison_item)
-                labels = labels + new_labels
-                parents = parents + new_parents
-                values = values + new_values
-
-        else:
-            new_labels, new_parents, new_values = preprocess_for_treemap(child_comparison)
-            labels = labels + new_labels
-            parents = parents + new_parents
-            values = values + new_values
-
-    return labels, parents, values
