@@ -197,9 +197,9 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
         diff.score = compare_leaf(diff.fhir_true, diff.fhir_pred)
         return diff
 
-    Resource = eval(resource_type)
+    Resource = eval(resource_type) # e.g. eval("Encounter")
 
-    resource_details = get_resource_details(Resource)
+    resource_details = get_resource_details(Resource)  # list of ElementDetails
     for element_details in resource_details:
 
         # Skip if the element is absent in both fhir_true and fhir_pred.
@@ -259,7 +259,7 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
         # Add the child node score to the current score
         diff.score = diff.score + childscore
 
-    diff.score.is_valid = validate_resource(diff.fhir_pred)
+    # diff.score.is_valid = validate_resource(diff.fhir_pred, diff.resource_type)
     
     return diff
 
