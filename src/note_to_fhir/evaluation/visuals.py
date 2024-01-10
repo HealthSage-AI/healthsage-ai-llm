@@ -3,12 +3,22 @@ from collections import defaultdict
 from src.note_to_fhir.evaluation.datamodels import FhirDiff
 import pprint
 
-def dict_to_html(fhir_dict):
+def dict_to_html(fhir_dict: dict) -> str:
+    """Prettify a FHIR dict for HTML output. Dicts are shortened to 100 characters
+
+    Args:
+        fhir_dict (dict): dictionary with FHIR data
+
+    Returns:
+        str: HTML string with FHIR data, where newlines and tabs are replaced by <br> and spaces.
+    """
     if type(fhir_dict) == defaultdict:
         fhir_dict = dict(fhir_dict)
     printer = pprint.PrettyPrinter(depth=1)
     dict_pretty = printer.pformat(fhir_dict)
     dict_pretty = dict_pretty.replace("\t", "  ").replace("\n", "<br>")
+    if len(dict_pretty) > 100:
+        dict_pretty = dict_pretty[:50] + "<br> .... <br>" + dict_pretty[-50:]
     return dict_pretty
 
 def preprocess_for_treemap(comparison: FhirDiff):
@@ -48,10 +58,17 @@ def preprocess_for_treemap(comparison: FhirDiff):
 
     return labels, parents, values
 
-def show_diff(diff: FhirDiff):
+def show_diff(diff: FhirDiff) -> None:
+    """Produces a treemap visualization of the FhirDiff object in plotly
+
+    Args:
+        diff (FhirDiff): Processed FhirDiff object with scores calculated.
+    """
     labels, parents, values = preprocess_for_treemap(diff)
     max_level = max([len(x.label.split(".")) for x in values])
-    labels_short = [label.split(".")[-1] for label in labels]
+
+    # Shorten text labels for treemap, only use last part of label, or last 2 parts if last part refers to index
+    labels_short = [label.split(".")[-1] if not label.split(".")[-1].isnumeric() else label.split(".")[-2:] for label in labels]
 
 
     fig = go.Figure(go.Treemap(
@@ -62,7 +79,7 @@ def show_diff(diff: FhirDiff):
         text=labels_short,
         hovertext=[f"{x.score}<br>true: {dict_to_html(x.fhir_true)}<br>pred: {dict_to_html(x.fhir_pred)}" for x in values],
         hoverinfo="text",
-        marker_colors=[x.score.score for x in values],
+        marker_colors=[x.score.accuracy for x in values],
         marker_colorscale='RdBu',
         marker_cmid=0.5
     ))

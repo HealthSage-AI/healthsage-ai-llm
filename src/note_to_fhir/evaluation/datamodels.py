@@ -13,7 +13,6 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from abc import ABCMeta
 from pydantic import BaseModel, computed_field
 from typing import Any, Optional
 
@@ -28,7 +27,7 @@ class FhirScore(BaseModel):
     
     @computed_field
     @property
-    def score(self) -> float:  # The overall accuracy
+    def accuracy(self) -> float:  # The overall accuracy
         return self.n_matches / max(self.n_leaves, 1)
     
     @computed_field
@@ -75,9 +74,15 @@ class FhirDiff(BaseModel):
     @computed_field
     @property
     def label(self) -> str:
-        parent_label = "" if not self.parent else self.parent.label + "."
-        entry_nr_label = "" if not self.entry_nr else "_" + str(self.entry_nr)
-        return parent_label + self.resource_type + entry_nr_label
+        """Labels are used to identify the node in the FHIR tree
+
+        Returns:
+            str: node label describing PARENT.KEY.ENTRY_NR where parent, key and entry_nr are optional
+        """
+        parent_label = "" if not self.parent else self.parent.label
+        keylabel = self.key if self.key != "resource" else self.resource_type
+        label = ".".join([parent_label, keylabel, self.entry_nr]).strip(".")
+        return label
     
     @computed_field
     @property

@@ -18,7 +18,7 @@ def test_fhirdiff() -> FhirDiff:
     """
     fhir_pred = json.loads(testset['train']['note_to_fhir'][0])
     fhir_true = json.loads(testset['train']['fhir_true'][0])
-    diff = FhirDiff(fhir_true=fhir_true, fhir_pred=fhir_pred, resource_name="Bundle")
+    diff = FhirDiff(fhir_true=fhir_true, fhir_pred=fhir_pred, resource_name="Bundle", key="Bundle")
     diff = calculate_diff(diff)
     return diff
 
@@ -30,7 +30,7 @@ def test_processing():
     diff = test_fhirdiff()
     
     assert diff.score.n_leaves == diff.score.n_matches + diff.score.n_additions + diff.score.n_deletions + diff.score.n_modifications
-    assert diff.score.score >= 0.0 and diff.score.score <= 1.0
+    assert diff.score.accuracy >= 0.0 and diff.score.accuracy <= 1.0
 
 
 if __name__ == "__main__":
