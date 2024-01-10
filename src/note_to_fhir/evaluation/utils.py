@@ -258,6 +258,8 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
 
         # Add the child node score to the current score
         diff.score = diff.score + childscore
+
+    diff.score.is_valid = validate_resource(diff.fhir_pred)
     
     return diff
 

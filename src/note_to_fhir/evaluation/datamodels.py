@@ -23,7 +23,7 @@ class FhirScore(BaseModel):
     n_deletions: int = 0  #  The number of missing leaf nodes, a.k.a. "False Negatives"
     n_modifications: int = 0  # The number of changes leaf nodes a.k.a. "Mistakes"
     n_matches: int = 0  # The number of identical leaf nodes, a.k.a. "True Positives"
-    n_valid: int = 0
+    is_valid: bool
     
     @computed_field
     @property
@@ -46,7 +46,7 @@ class FhirScore(BaseModel):
                          n_deletions=self.n_deletions + other.n_deletions,
                          n_modifications=self.n_modifications + other.n_modifications,
                          n_matches=self.n_matches+other.n_matches,
-                         n_valid=self.n_valid + other.n_valid)
+                         is_valid=None)
     
     
 class ElementDetails(BaseModel):
