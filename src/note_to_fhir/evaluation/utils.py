@@ -22,6 +22,8 @@ import warnings
 import plotly.graph_objects as go
 from collections import defaultdict
 
+# To do: PEP8, Linter
+
 resource_mapping = {
     "Patient": Patient,
     "Condition": Condition,
@@ -181,7 +183,9 @@ def get_resource_type(resource, resource_name) -> str:
             return resource['resourceType']
     return resource_name
 
-
+# To do:
+# - Redesign input fhir_true, fhir_pred, return diff instead of diff in diff out
+# - put logic for array, leaf and struct in functions
 def calculate_diff(diff: FhirDiff) -> FhirDiff:
     """Process FhirDiff to calculate FhirDiff.fhirscore
 
@@ -197,7 +201,7 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
         diff.score = compare_leaf(diff.fhir_true, diff.fhir_pred)
         return diff
 
-    Resource = eval(resource_type) # e.g. eval("Encounter")
+    Resource = eval(resource_type) # e.g. eval("Encounter") To Do: replace with non-eval solution or make function with justification
 
     resource_details = get_resource_details(Resource)  # list of ElementDetails
     for element_details in resource_details:

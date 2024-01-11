@@ -22,8 +22,8 @@ def test_fhirdiff() -> FhirDiff:
     diff = calculate_diff(diff)
     return diff
 
-def test_visualization():
-    diff = test_fhirdiff()
+def test_visualization():  # To do: not automated, place somewhere else.
+    diff = test_fhirdiff()  # To Do: not to be used as function 
     show_diff(diff)
 
 def test_processing():
