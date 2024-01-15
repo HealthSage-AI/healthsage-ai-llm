@@ -16,7 +16,12 @@
 """Contains all in-scope FHIR models for the note_to_fhir project
 """
 from fhir.resources.R4B.reference import Reference
-from fhir.resources.R4B.patient import Patient, PatientCommunication, PatientContact, PatientLink
+from fhir.resources.R4B.patient import (
+    Patient,
+    PatientCommunication,
+    PatientContact,
+    PatientLink,
+)
 from fhir.resources.R4B.address import Address
 from fhir.resources.R4B.codeableconcept import CodeableConcept
 from fhir.resources.R4B.coding import Coding
@@ -35,3 +40,31 @@ from fhir.resources.R4B.condition import Condition
 from fhir.resources.R4B.immunization import Immunization
 from fhir.resources.R4B.observation import Observation
 from fhir.resources.R4B.medication import Medication
+
+object_mapping = {
+    "Patient": Patient,
+    "PatientCommunication": PatientCommunication,
+    "PatientContact": PatientContact,
+    "PatientLink": PatientLink,
+    "Address": Address,
+    "CodeableConcept": CodeableConcept,
+    "Coding": Coding,
+    "HumanName": HumanName,
+    "ContactPoint": ContactPoint,
+    "Encounter": Encounter,
+    "EncounterParticipant": EncounterParticipant,
+    "AllergyIntolerance": AllergyIntolerance,
+    "Period": Period,
+    "Narrative": Narrative,
+    "Identifier": Identifier,
+    "Bundle": Bundle,
+    "BundleEntry": BundleEntry,
+    "Organization": Organization,
+    "Practitioner": Practitioner,
+    "Procedure": Procedure,
+    "Condition": Condition,
+    "Immunization": Immunization,
+    "Observation": Observation,
+    "Medication": Medication,
+    "Reference": Reference,
+}

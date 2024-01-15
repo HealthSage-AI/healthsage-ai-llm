@@ -16,41 +16,52 @@
 from pydantic import BaseModel, computed_field
 from typing import Any, Optional
 
-class FhirScore(BaseModel):
 
+class FhirScore(BaseModel):
     n_leaves: int = 0  # The number of leaf nodes in this object
-    n_additions: int = 0  # The number of hallucinated leaf nodes, a.k.a. "False Positives"
-    n_deletions: int = 0  #  The number of missing leaf nodes, a.k.a. "False Negatives"
-    n_modifications: int = 0  # The number of changes leaf nodes a.k.a. "Mistakes"
-    n_matches: int = 0  # The number of identical leaf nodes, a.k.a. "True Positives"
+    n_additions: int = 0  # n hallucinated leaf nodes, a.k.a. "False Positives"
+    n_deletions: int = 0  #  n of missing leaf nodes, a.k.a. "False Negatives"
+    n_modifications: int = 0  # n of changes leaf nodes a.k.a. "Mistakes"
+    n_matches: int = 0  # n of identical leaf nodes, a.k.a. "True Positives"
     is_valid: Optional[bool] = None
-    
+
     @computed_field
     @property
     def accuracy(self) -> float:  # The overall accuracy
         return self.n_matches / max(self.n_leaves, 1)
-    
+
     @computed_field
     @property
-    def precision(self) -> float: # What % of generated FHIR was correct
-        return self.n_matches / max(self.n_matches + self.n_additions + self.n_modifications, 1)
-    
+    def precision(self) -> float:  # What % of generated FHIR was correct
+        return self.n_matches / max(
+            self.n_matches + self.n_additions + self.n_modifications, 1
+        )
+
     @computed_field
     @property
     def recall(self) -> float:  # What % of reference FHIR was correctly generated
-        return self.n_matches / max(self.n_matches + self.n_deletions + self.n_deletions, 1)
-    
-    def __add__(self, other: 'FhirScore'):
-        return FhirScore(n_leaves=self.n_leaves + other.n_leaves,
-                         n_additions=self.n_additions + other.n_additions,
-                         n_deletions=self.n_deletions + other.n_deletions,
-                         n_modifications=self.n_modifications + other.n_modifications,
-                         n_matches=self.n_matches+other.n_matches,
-                         is_valid=None)
-    
-    
+        return self.n_matches / max(
+            self.n_matches + self.n_deletions + self.n_deletions, 1
+        )
+
+    def __add__(self, other: "FhirScore"):
+        return FhirScore(
+            n_leaves=self.n_leaves + other.n_leaves,
+            n_additions=self.n_additions + other.n_additions,
+            n_deletions=self.n_deletions + other.n_deletions,
+            n_modifications=self.n_modifications + other.n_modifications,
+            n_matches=self.n_matches + other.n_matches,
+            is_valid=None,
+        )
+
+    def __radd__(self, other: Any):
+        if type(other) != FhirScore:
+            return self
+        else:
+            return self.__add__(other)
+
+
 class ElementDetails(BaseModel):
-    
     key: str
     fhirtype: str
     required: bool
@@ -59,13 +70,12 @@ class ElementDetails(BaseModel):
     is_struct: bool
     array_item_type: Optional[str]
 
-    
-class FhirDiff(BaseModel):
 
+class FhirDiff(BaseModel):
     fhir_true: Any
     fhir_pred: Any
-    resource_name: str # resource type or fhir type 
-    parent: 'FhirDiff' = None
+    resource_name: str  # resource type or fhir type
+    parent: "FhirDiff" = None
     children: dict = {}
     entry_nr: str = ""  # For lists, tracking index
     key: str = ""  # What the element is named in its parent object
@@ -83,7 +93,7 @@ class FhirDiff(BaseModel):
         keylabel = self.key if self.key != "resource" else self.resource_type
         label = ".".join([parent_label, keylabel, self.entry_nr]).strip(".")
         return label
-    
+
     @computed_field
     @property
     def resource_type(self) -> str:

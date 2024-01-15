@@ -15,26 +15,13 @@
 
 import json
 from src.note_to_fhir.evaluation.datamodels import FhirScore, ElementDetails, FhirDiff
-from src.note_to_fhir.evaluation.fhirmodels import *
+from src.note_to_fhir.evaluation.fhirmodels import object_mapping
 
 from typing import List
 import warnings
-import plotly.graph_objects as go
 from collections import defaultdict
+from pydantic.v1.main import ModelMetaclass
 
-# To do: PEP8, Linter
-
-resource_mapping = {
-    "Patient": Patient,
-    "Condition": Condition,
-    "Encounter": Encounter,
-    "Organization": Organization,
-    "Practitioner": Practitioner,
-    "Procedure": Procedure,
-    "AllergyIntolerance": AllergyIntolerance,
-    "Immunization": Immunization,
-    "Observation": Observation
-}
 
 def get_resource_details(Resource) -> List[ElementDetails]:
     """Get the details of a certain fhir resource that are relevant to evaluation in a friendly format.
@@ -48,34 +35,37 @@ def get_resource_details(Resource) -> List[ElementDetails]:
 
     resource_details = []
 
-    for name, spec in Resource.schema()['properties'].items():
-        if 'element_property' not in spec.keys():
+    for name, spec in Resource.schema()["properties"].items():
+        if "element_property" not in spec.keys():
             continue
-        if not spec['element_property']:
+        if not spec["element_property"]:
             continue
-        if 'type' not in spec.keys():
-            continue        
+        if "type" not in spec.keys():
+            continue
 
-        required = False if 'element_required' not in spec.keys() else spec['element_required']
+        required = (
+            False if "element_required" not in spec.keys() else spec["element_required"]
+        )
 
-        fhirtype = spec['type']
+        fhirtype = spec["type"]
         array_item_type = None
-        if fhirtype == 'array':
-            array_item_type = spec['items']['type']
+        if fhirtype == "array":
+            array_item_type = spec["items"]["type"]
 
-        element_details = ElementDetails(key=name,
-                                        fhirtype=fhirtype,
-                                        required=required,
-                                        is_leaf=fhirtype_is_leaf(fhirtype),
-                                        is_struct=fhirtype_is_struct(fhirtype),
-                                        is_array=fhirtype_is_array(fhirtype),
-                                        array_item_type=array_item_type
-                                        )
+        element_details = ElementDetails(
+            key=name,
+            fhirtype=fhirtype,
+            required=required,
+            is_leaf=fhirtype_is_leaf(fhirtype),
+            is_struct=fhirtype_is_struct(fhirtype),
+            is_array=fhirtype_is_array(fhirtype),
+            array_item_type=array_item_type,
+        )
 
-            
         resource_details.append(element_details)
-            
+
     return resource_details
+
 
 def match_list_len(list_1: list, list_2: list) -> tuple:
     """Iteratively appends None to shortest list untill it matches longest list
@@ -100,6 +90,7 @@ def match_list_len(list_1: list, list_2: list) -> tuple:
             continue
     return list_1, list_2
 
+
 def validate_resource(resource: dict) -> bool:
     """Checks whether a FHIR resource is valid
 
@@ -111,12 +102,14 @@ def validate_resource(resource: dict) -> bool:
     """
     assert "resourceType" in resource.keys(), "resourceType unspecified"
     try:
-        ResourceClass = resource_mapping[resource['resourceType']]
+        ResourceClass = object_mapping[resource["resourceType"]]
         resource = ResourceClass.parse_raw(json.dumps(resource))
-        return True
-    except:
-        return False
-    
+        is_parsed = True
+    except Exception:
+        is_parsed = False
+    return is_parsed
+
+
 def fhirtype_is_struct(fhirtype: str) -> bool:
     """Check whether fhirtype is a struct by checking if the first letter of the type is a capital letter.
 
@@ -128,6 +121,7 @@ def fhirtype_is_struct(fhirtype: str) -> bool:
     """
     return fhirtype[0] != fhirtype[0].lower()
 
+
 def fhirtype_is_array(fhirtype: str) -> bool:
     """Check whether fhirtype is array
 
@@ -137,7 +131,8 @@ def fhirtype_is_array(fhirtype: str) -> bool:
     Returns:
         bool: True if fhirtype is array, False otherwise
     """
-    return fhirtype == 'array'
+    return fhirtype == "array"
+
 
 def fhirtype_is_leaf(fhirtype) -> bool:
     """Check whether a fhirtype is a leaf. i.e. whether the fhirtype contains no nested fields.
@@ -150,6 +145,7 @@ def fhirtype_is_leaf(fhirtype) -> bool:
     """
     return fhirtype in ["boolean", "integer", "string", "decimal"]
 
+
 def map_align_arrays(arr1, arr2):
     """Maps two arrays to eachother and aligns them in corresponding order.
 
@@ -160,15 +156,17 @@ def map_align_arrays(arr1, arr2):
     Returns:
         arr1, arr2: Where arr1[i] corresponds to arr2[i]
     """
-    warnings.warn(f"NotImplemented; arrays are assumed to be in identical order.")
+    warnings.warn("NotImplemented; arrays are assumed to be in identical order.")
     return match_list_len(arr1, arr2)
 
+
 def convert_to_defaultdict(obj) -> defaultdict:
-    if type(obj) == dict or obj == None:
+    if isinstance(obj, dict) or obj is None:
         return defaultdict(dict, obj) if obj else defaultdict(dict)
     else:
         return obj
-    
+
+
 def get_resource_type(resource, resource_name) -> str:
     """Determine the resource type of a resource
 
@@ -179,14 +177,45 @@ def get_resource_type(resource, resource_name) -> str:
         str: string representation of the resource type
     """
     if isinstance(resource, dict):
-        if resource['resourceType']:
-            return resource['resourceType']
+        if resource["resourceType"]:
+            return resource["resourceType"]
     return resource_name
 
-# To do:
-# - Redesign input fhir_true, fhir_pred, return diff instead of diff in diff out
-# - put logic for array, leaf and struct in functions
-def calculate_diff(diff: FhirDiff) -> FhirDiff:
+
+def get_resource_class(resource_type: str) -> ModelMetaclass:
+    """Get the FhirResource class for a given resource type.
+
+    Args:
+        resource_type (str): The resource type
+
+    Returns:
+        FhirResource: The FhirResource class
+    """
+    return object_mapping[resource_type]
+
+
+def calculate_diff(fhir_true: dict, fhir_pred: dict, resource_type: str) -> FhirDiff:
+    """Calculate the FhirDiff object for comparing two FHIR resources.
+
+    Args:
+        fhir_true (dict): The ground truth FHIR resource
+        fhir_pred (dict): The predicted/generated FHIR resource
+        resource_type (str): The resource type
+
+    Returns:
+        FhirDiff: Tree object containing the fhir to be compared.
+    """
+    diff = FhirDiff(
+        fhir_true=fhir_true,
+        fhir_pred=fhir_pred,
+        resource_name=resource_type,
+        key=resource_type,
+    )
+    diff = _process_diff(diff)
+    return diff
+
+
+def _process_diff(diff: FhirDiff) -> FhirDiff:
     """Process FhirDiff to calculate FhirDiff.fhirscore
 
     Args:
@@ -201,71 +230,124 @@ def calculate_diff(diff: FhirDiff) -> FhirDiff:
         diff.score = compare_leaf(diff.fhir_true, diff.fhir_pred)
         return diff
 
-    Resource = eval(resource_type) # e.g. eval("Encounter") To Do: replace with non-eval solution or make function with justification
+    Resource = get_resource_class(
+        resource_type
+    )
 
     resource_details = get_resource_details(Resource)  # list of ElementDetails
     for element_details in resource_details:
-
         # Skip if the element is absent in both fhir_true and fhir_pred.
-        if element_details.key not in diff.fhir_pred.keys() and element_details.key not in diff.fhir_true.keys():
+        if (
+            element_details.key not in diff.fhir_pred.keys()
+            and element_details.key not in diff.fhir_true.keys()
+        ):
             continue
-        if diff.fhir_true[element_details.key] is None and diff.fhir_pred[element_details.key] is None:
+        if (
+            diff.fhir_true[element_details.key] is None
+            and diff.fhir_pred[element_details.key] is None
+        ):
             continue
 
         # If the element is a struct (dictionary) with arbitrary depth, handle recursively
-        fhir_true_child, fhir_pred_child = convert_to_defaultdict(diff.fhir_true[element_details.key]), convert_to_defaultdict(diff.fhir_pred[element_details.key])
         if element_details.is_struct:
-            childdiff = FhirDiff(fhir_true=fhir_true_child,
-                                 fhir_pred=fhir_pred_child,
-                                 resource_name=element_details.fhirtype,
-                                 parent=diff,
-                                 key=element_details.key
-                                 )
-            childdiff = calculate_diff(childdiff)
-            childscore = childdiff.score
-            diff.children[element_details.key] = childdiff
+            _process_struct(diff, element_details)
+            childscore = diff.children[element_details.key].score
 
         # If the element is an array, handle recursively on each array item
         elif element_details.is_array:
-            diff.children[element_details.key] = []
-            fhir_true_child, fhir_pred_child = match_list_len(diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key])
-
-            i=1
-            childscore = FhirScore()
-            for fhir_true_child_item, fhir_pred_child_item in zip(fhir_true_child, fhir_pred_child):
-                fhir_pred_child_item = convert_to_defaultdict(fhir_pred_child_item)
-                fhir_true_child_item = convert_to_defaultdict(fhir_true_child_item)
-                childdiff_item = FhirDiff(fhir_true=fhir_true_child_item,
-                                          fhir_pred=fhir_pred_child_item,
-                                          resource_name=element_details.array_item_type,
-                                          parent=diff,
-                                          entry_nr=str(i),
-                                          key=element_details.key)
-                childdiff_item = calculate_diff(childdiff_item)
-                diff.children[element_details.key].append(childdiff_item)
-                childscore = childscore + childdiff_item.score
-                i+=1
+            _process_array(diff, element_details)
+            childscore = sum(
+                [item.score for item in diff.children[element_details.key]]
+            )
 
         # If the element is a leaf, calculate the score directly
         elif element_details.is_leaf:
-            childdiff = FhirDiff(fhir_true = diff.fhir_true[element_details.key],
-                                 fhir_pred = diff.fhir_pred[element_details.key],
-                                 resource_name=element_details.fhirtype,
-                                 parent=diff,
-                                 key=element_details.key
-                                 )
-            childscore = compare_leaf(diff.fhir_true[element_details.key],
-                                 diff.fhir_pred[element_details.key]
-                                 )
-            childdiff.score = childscore
-            diff.children[element_details.key] = childdiff
+            _process_leaf(diff, element_details)
+            childscore = diff.children[element_details.key].score
 
         # Add the child node score to the current score
         diff.score = diff.score + childscore
 
     # diff.score.is_valid = validate_resource(diff.fhir_pred, diff.resource_type)
-    
+
     return diff
+
+
+def _process_leaf(diff: FhirDiff, element_details: ElementDetails):
+    """Subprocess of process_diff for leaf nodes
+
+    Args:
+        diff (FhirDiff): comparison object containing the fhir to be compared
+        element_details (ElementDetails): details about the element to be compared
+    """
+    childdiff = FhirDiff(
+        fhir_true=diff.fhir_true[element_details.key],
+        fhir_pred=diff.fhir_pred[element_details.key],
+        resource_name=element_details.fhirtype,
+        parent=diff,
+        key=element_details.key,
+    )
+    childscore = compare_leaf(
+        diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key]
+    )
+    childdiff.score = childscore
+    diff.children[element_details.key] = childdiff
+
+
+def _process_struct(diff: FhirDiff, element_details: ElementDetails):
+    """Subprocess of process_diff for struct nodes
+
+    Args:
+        diff (FhirDiff): _description_
+        element_details (ElementDetails): _description_
+    """
+    fhir_true_child, fhir_pred_child = (
+        convert_to_defaultdict(diff.fhir_true[element_details.key]),
+        convert_to_defaultdict(diff.fhir_pred[element_details.key]),
+    )
+    childdiff = FhirDiff(
+        fhir_true=fhir_true_child,
+        fhir_pred=fhir_pred_child,
+        resource_name=element_details.fhirtype,
+        parent=diff,
+        key=element_details.key,
+    )
+    childdiff = _process_diff(childdiff)
+    diff.children[element_details.key] = childdiff
+
+
+def _process_array(diff: FhirDiff, element_details: ElementDetails):
+    """Subprocess of process_diff for array nodes
+
+    Args:
+        diff (FhirDiff): _description_
+        element_details (ElementDetails): _description_
+    """
+    diff.children[element_details.key] = []
+    fhir_true_child, fhir_pred_child = match_list_len(
+        diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key]
+    )
+
+    i = 0
+    childscore = FhirScore()
+    for fhir_true_child_item, fhir_pred_child_item in zip(
+        fhir_true_child, fhir_pred_child
+    ):
+        fhir_pred_child_item = convert_to_defaultdict(fhir_pred_child_item)
+        fhir_true_child_item = convert_to_defaultdict(fhir_true_child_item)
+        childdiff_item = FhirDiff(
+            fhir_true=fhir_true_child_item,
+            fhir_pred=fhir_pred_child_item,
+            resource_name=element_details.array_item_type,
+            parent=diff,
+            entry_nr=str(i),
+            key=element_details.key,
+        )
+        childdiff_item = _process_diff(childdiff_item)
+        diff.children[element_details.key].append(childdiff_item)
+        childscore = childscore + childdiff_item.score
+        i += 1
+
 
 def compare_leaf(element_true: any, element_pred: any) -> FhirScore:
     """Compares two leaf nodes of a FHIR structure
@@ -277,7 +359,9 @@ def compare_leaf(element_true: any, element_pred: any) -> FhirScore:
     Returns:
         FhirScore: object containing score for the leaf node.
     """
-    assert not (element_pred is None and element_true is None), "Element can't both be None for comparison"
+    assert not (
+        element_pred is None and element_true is None
+    ), "Element can't both be None for comparison"
     if not element_pred:
         fhirscore = FhirScore(n_deletions=1, n_leaves=1)  # miss
     elif not element_true:
