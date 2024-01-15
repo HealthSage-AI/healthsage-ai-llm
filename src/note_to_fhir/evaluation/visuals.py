@@ -30,7 +30,7 @@ def dict_to_html(fhir_dict: dict) -> str:
     return dict_pretty
 
 
-def preprocess_for_treemap(comparison: FhirDiff):
+def preprocess_for_treemap(diff: FhirDiff):
     """Flattens a nested comparison object for plotly treemaps
 
     Args:
@@ -44,14 +44,14 @@ def preprocess_for_treemap(comparison: FhirDiff):
     """
 
     # Current Node
-    labels = [comparison.label]
-    parents = [comparison.parent.label] if comparison.parent else [""]
-    values = [comparison]
+    labels = [diff.label]
+    parents = [diff.parent.label] if diff.parent else [""]
+    values = [diff]
 
-    if not comparison.children:
+    if not diff.children:
         return labels, parents, values
 
-    for child_comparison in comparison.children.values():
+    for child_comparison in diff.children.values():
         if isinstance(child_comparison, list):
             for child_comparison_item in child_comparison:
                 new_labels, new_parents, new_values = preprocess_for_treemap(

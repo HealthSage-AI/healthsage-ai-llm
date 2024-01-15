@@ -21,6 +21,7 @@ from typing import List
 import warnings
 from collections import defaultdict
 from pydantic.v1.main import ModelMetaclass
+import pandas as pd
 
 
 def get_resource_details(Resource) -> List[ElementDetails]:
@@ -194,7 +195,7 @@ def get_resource_class(resource_type: str) -> ModelMetaclass:
     return object_mapping[resource_type]
 
 
-def calculate_diff(fhir_true: dict, fhir_pred: dict, resource_type: str) -> FhirDiff:
+def get_diff(fhir_true: dict, fhir_pred: dict, resource_type: str) -> FhirDiff:
     """Calculate the FhirDiff object for comparing two FHIR resources.
 
     Args:
@@ -211,11 +212,11 @@ def calculate_diff(fhir_true: dict, fhir_pred: dict, resource_type: str) -> Fhir
         resource_name=resource_type,
         key=resource_type,
     )
-    diff = _process_diff(diff)
+    diff = _expand_diff_tree(diff)
     return diff
 
 
-def _process_diff(diff: FhirDiff) -> FhirDiff:
+def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
     """Process FhirDiff to calculate FhirDiff.fhirscore
 
     Args:
@@ -250,19 +251,19 @@ def _process_diff(diff: FhirDiff) -> FhirDiff:
 
         # If the element is a struct (dictionary) with arbitrary depth, handle recursively
         if element_details.is_struct:
-            _process_struct(diff, element_details)
+            _expand_diff_tree_struct(diff, element_details)
             childscore = diff.children[element_details.key].score
 
         # If the element is an array, handle recursively on each array item
         elif element_details.is_array:
-            _process_array(diff, element_details)
+            _expand_diff_tree_array(diff, element_details)
             childscore = sum(
                 [item.score for item in diff.children[element_details.key]]
             )
 
         # If the element is a leaf, calculate the score directly
         elif element_details.is_leaf:
-            _process_leaf(diff, element_details)
+            _expand_diff_tree_leaf(diff, element_details)
             childscore = diff.children[element_details.key].score
 
         # Add the child node score to the current score
@@ -273,8 +274,8 @@ def _process_diff(diff: FhirDiff) -> FhirDiff:
     return diff
 
 
-def _process_leaf(diff: FhirDiff, element_details: ElementDetails):
-    """Subprocess of process_diff for leaf nodes
+def _expand_diff_tree_leaf(diff: FhirDiff, element_details: ElementDetails):
+    """Expands FhirDiff with leaf node
 
     Args:
         diff (FhirDiff): comparison object containing the fhir to be compared
@@ -294,8 +295,8 @@ def _process_leaf(diff: FhirDiff, element_details: ElementDetails):
     diff.children[element_details.key] = childdiff
 
 
-def _process_struct(diff: FhirDiff, element_details: ElementDetails):
-    """Subprocess of process_diff for struct nodes
+def _expand_diff_tree_struct(diff: FhirDiff, element_details: ElementDetails):
+    """Expand FhirDiff with struct/dict-like node
 
     Args:
         diff (FhirDiff): _description_
@@ -312,12 +313,12 @@ def _process_struct(diff: FhirDiff, element_details: ElementDetails):
         parent=diff,
         key=element_details.key,
     )
-    childdiff = _process_diff(childdiff)
+    childdiff = _expand_diff_tree(childdiff)
     diff.children[element_details.key] = childdiff
 
 
-def _process_array(diff: FhirDiff, element_details: ElementDetails):
-    """Subprocess of process_diff for array nodes
+def _expand_diff_tree_array(diff: FhirDiff, element_details: ElementDetails):
+    """Expand FhirDiff with array node
 
     Args:
         diff (FhirDiff): _description_
@@ -343,7 +344,7 @@ def _process_array(diff: FhirDiff, element_details: ElementDetails):
             entry_nr=str(i),
             key=element_details.key,
         )
-        childdiff_item = _process_diff(childdiff_item)
+        childdiff_item = _expand_diff_tree(childdiff_item)
         diff.children[element_details.key].append(childdiff_item)
         childscore = childscore + childdiff_item.score
         i += 1
@@ -371,3 +372,58 @@ def compare_leaf(element_true: any, element_pred: any) -> FhirScore:
     elif element_true == element_pred:
         fhirscore = FhirScore(n_matches=1, n_leaves=1)  # correct
     return fhirscore
+
+
+def diff_to_list(diff: FhirDiff) -> list:
+    """Flattens a Diff Tree object to a list of unhierarchical FhirDiff objects.
+
+    Args:
+        comparison (FhirDiff): FhirDiff object
+
+    Returns:
+        list: list of FhirDiff objects
+    """
+
+    # Current Node
+    diff_copy = diff.model_copy(deep=True)
+    diff_copy.parent = None
+    diff_copy.children = None
+    diffs = [diff_copy]
+
+    if not diff.children:
+        return diffs
+
+    for child_comparison in diff.children.values():
+        if isinstance(child_comparison, list):
+            for child_comparison_item in child_comparison:
+                new_diffs = diff_to_list(
+                    child_comparison_item
+                )
+                diffs = diffs + new_diffs
+
+        else:
+            new_diffs = diff_to_list(
+                child_comparison
+            )
+            diffs = diffs + new_diffs
+    return diffs
+
+
+def diff_to_dataframe(diff: FhirDiff) -> pd.DataFrame:
+    """Flattens a Diff Tree object to a pandas dataframe
+
+    Args:
+        comparison (FhirDiff): FhirDiff object
+
+    Returns:
+        pd.DataFrame: pandas dataframe containing the diff
+    """
+    diffs = diff_to_list(diff)
+    diff_dicts = []
+    for diff in diffs:
+        diff_dict_out = diff.model_dump()
+        score = diff.score.model_dump()
+        diff_dict_out.update(score)
+        diff_dicts.append(diff_dict_out)
+    df = pd.DataFrame(diff_dicts)[['resource_type', 'entry_nr', 'key', 'label', 'n_leaves', 'n_matches','n_additions','n_deletions','n_modifications','accuracy','precision','recall']]
+    return df
