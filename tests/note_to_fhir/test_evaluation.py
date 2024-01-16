@@ -29,6 +29,25 @@ def test_fhirdiff() -> FhirDiff:
     assert diff.score.accuracy >= 0.0 and diff.score.accuracy <= 1.0
     return diff
 
+def test_fhirdiff_encounter() -> FhirDiff:
+    """Tests the FhirDiff class
+
+    Returns:
+        FhirDiff: FhirDiff object (without score calculated)
+    """
+    fhir_pred = json.loads(testset["train"]["note_to_fhir"][0])['entry'][0]
+    fhir_true = json.loads(testset["train"]["fhir_true"][0])['entry'][0]
+    diff = get_diff(fhir_true, fhir_pred, "BundleEntry")
+    assert (
+        diff.score.n_leaves
+        == diff.score.n_matches
+        + diff.score.n_additions
+        + diff.score.n_deletions
+        + diff.score.n_modifications
+    )
+    assert diff.score.accuracy > 0.0 and diff.score.accuracy < 1.0
+    return diff
+
 
 def test_diff_to_list():
     diff = test_fhirdiff()
@@ -45,5 +64,6 @@ def test_diff_to_dataframe():
 
 if __name__ == "__main__":
     test_fhirdiff()
+    test_fhirdiff_encounter()
     test_diff_to_list()
     test_diff_to_dataframe()

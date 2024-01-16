@@ -418,10 +418,12 @@ def diff_to_dataframe(diff: FhirDiff) -> pd.DataFrame:
     """
     diffs = diff_to_list(diff)
     diff_dicts = []
+    scores = [diff.score for diff in diffs]
     for diff in diffs:
         diff_dict_out = diff.model_dump()
         score = diff.score.model_dump()
         diff_dict_out.update(score)
         diff_dicts.append(diff_dict_out)
     df = pd.DataFrame(diff_dicts)[['resource_type', 'entry_nr', 'key', 'label', 'n_leaves', 'n_matches','n_additions','n_deletions','n_modifications','accuracy','precision','recall']]
+    df['score'] = scores
     return df
