@@ -8,13 +8,9 @@ numpy
 scikit-learn
 openai==0.28
 matplotlib
+pydantic==2.5.2
 
 # training and inference
 torch
 pytorch-gpu
 python-dotenv
-
-# demo
-requests
-requests-toolbelt
-marko
