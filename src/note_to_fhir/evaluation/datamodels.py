@@ -13,8 +13,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, computed_field, validator, Field
 from typing import Any, Optional
+from collections import defaultdict
 
 
 class FhirScore(BaseModel):
@@ -45,6 +46,8 @@ class FhirScore(BaseModel):
         )
 
     def __add__(self, other: "FhirScore"):
+        if type(other) != FhirScore:
+            return self
         return FhirScore(
             n_leaves=self.n_leaves + other.n_leaves,
             n_additions=self.n_additions + other.n_additions,
@@ -75,8 +78,8 @@ class FhirDiff(BaseModel):
     fhir_true: Any
     fhir_pred: Any
     resource_name: str  # resource type or fhir type
-    parent: "FhirDiff" = None
-    children: dict = {}
+    parent: Optional["FhirDiff"] = Field(default_factory=lambda: None, repr=False)
+    children: dict = Field(default_factory=dict, repr=False)
     entry_nr: str = ""  # For lists, tracking index
     key: str = ""  # What the element is named in its parent object
     score: FhirScore = FhirScore()
@@ -97,7 +100,15 @@ class FhirDiff(BaseModel):
     @computed_field
     @property
     def resource_type(self) -> str:
-        if isinstance(self.fhir_true, dict):
+        if isinstance(self.fhir_true, dict) and len(self.fhir_true) > 0:
             if self.fhir_true["resourceType"]:
                 return self.fhir_true["resourceType"]
         return self.resource_name
+    
+    @validator("fhir_true", "fhir_pred", pre=True)
+    def convert_to_defaultdict(cls, v):
+        if isinstance(v, dict):
+            return defaultdict(lambda: {}, v)
+        if v is None:
+            return defaultdict(lambda: {})
+        return v

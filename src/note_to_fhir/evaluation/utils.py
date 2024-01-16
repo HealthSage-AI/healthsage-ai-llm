@@ -234,8 +234,10 @@ def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
     Resource = get_resource_class(
         resource_type
     )
-
     resource_details = get_resource_details(Resource)  # list of ElementDetails
+
+
+
     for element_details in resource_details:
         # Skip if the element is absent in both fhir_true and fhir_pred.
         if (
@@ -302,13 +304,9 @@ def _expand_diff_tree_struct(diff: FhirDiff, element_details: ElementDetails):
         diff (FhirDiff): _description_
         element_details (ElementDetails): _description_
     """
-    fhir_true_child, fhir_pred_child = (
-        convert_to_defaultdict(diff.fhir_true[element_details.key]),
-        convert_to_defaultdict(diff.fhir_pred[element_details.key]),
-    )
     childdiff = FhirDiff(
-        fhir_true=fhir_true_child,
-        fhir_pred=fhir_pred_child,
+        fhir_true=diff.fhir_true[element_details.key],
+        fhir_pred=diff.fhir_pred[element_details.key],
         resource_name=element_details.fhirtype,
         parent=diff,
         key=element_details.key,
@@ -324,6 +322,8 @@ def _expand_diff_tree_array(diff: FhirDiff, element_details: ElementDetails):
         diff (FhirDiff): _description_
         element_details (ElementDetails): _description_
     """
+    if diff.fhir_pred == {}:
+        diff.fhir_pred[element_details.key] = []
     diff.children[element_details.key] = []
     fhir_true_child, fhir_pred_child = match_list_len(
         diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key]
@@ -334,8 +334,6 @@ def _expand_diff_tree_array(diff: FhirDiff, element_details: ElementDetails):
     for fhir_true_child_item, fhir_pred_child_item in zip(
         fhir_true_child, fhir_pred_child
     ):
-        fhir_pred_child_item = convert_to_defaultdict(fhir_pred_child_item)
-        fhir_true_child_item = convert_to_defaultdict(fhir_true_child_item)
         childdiff_item = FhirDiff(
             fhir_true=fhir_true_child_item,
             fhir_pred=fhir_pred_child_item,

@@ -28,7 +28,7 @@ from fhir.resources.R4B.coding import Coding
 from fhir.resources.R4B.humanname import HumanName
 from fhir.resources.R4B.contactpoint import ContactPoint
 from fhir.resources.R4B.encounter import Encounter, EncounterParticipant
-from fhir.resources.R4B.allergyintolerance import AllergyIntolerance
+from fhir.resources.R4B.allergyintolerance import AllergyIntolerance, AllergyIntoleranceReaction
 from fhir.resources.R4B.period import Period
 from fhir.resources.R4B.narrative import Narrative
 from fhir.resources.R4B.identifier import Identifier
@@ -40,6 +40,8 @@ from fhir.resources.R4B.condition import Condition
 from fhir.resources.R4B.immunization import Immunization
 from fhir.resources.R4B.observation import Observation
 from fhir.resources.R4B.medication import Medication
+from fhir.resources.R4B.quantity import Quantity
+from fhir.resources.R4B.resource import Resource
 
 object_mapping = {
     "Patient": Patient,
@@ -67,4 +69,7 @@ object_mapping = {
     "Observation": Observation,
     "Medication": Medication,
     "Reference": Reference,
+    "Quantity": Quantity,
+    "Resource": Resource,
+    "AllergyIntoleranceReaction": AllergyIntoleranceReaction,
 }
