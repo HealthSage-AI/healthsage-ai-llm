@@ -13,7 +13,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from pydantic import BaseModel, computed_field, validator, Field
+from pydantic import BaseModel, computed_field, field_validator, Field
 from typing import Any, Optional
 from collections import defaultdict
 
@@ -42,11 +42,11 @@ class FhirScore(BaseModel):
     @property
     def recall(self) -> float:  # What % of reference FHIR was correctly generated
         return self.n_matches / max(
-            self.n_matches + self.n_deletions + self.n_deletions, 1
+            self.n_matches + self.n_deletions + self.n_modifications, 1
         )
 
     def __add__(self, other: "FhirScore"):
-        if type(other) != FhirScore:
+        if not isinstance(other, FhirScore):
             return self
         return FhirScore(
             n_leaves=self.n_leaves + other.n_leaves,
@@ -58,7 +58,7 @@ class FhirScore(BaseModel):
         )
 
     def __radd__(self, other: Any):
-        if type(other) != FhirScore:
+        if not isinstance(other, FhirScore):
             return self
         else:
             return self.__add__(other)
@@ -104,8 +104,8 @@ class FhirDiff(BaseModel):
             if self.fhir_true["resourceType"]:
                 return self.fhir_true["resourceType"]
         return self.resource_name
-    
-    @validator("fhir_true", "fhir_pred", pre=True)
+
+    @field_validator("fhir_true", "fhir_pred", mode="before")
     def convert_to_defaultdict(cls, v):
         if isinstance(v, dict):
             return defaultdict(lambda: {}, v)

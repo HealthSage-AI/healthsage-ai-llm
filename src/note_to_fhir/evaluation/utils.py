@@ -69,13 +69,13 @@ def get_resource_details(Resource) -> List[ElementDetails]:
 
 
 def match_list_len(list_1: list, list_2: list) -> tuple:
-    """Iteratively appends None to shortest list untill it matches longest list
+    """Iteratively appends None to the shortest list untill it matches the longest list
     Args:
         list_1 (list): A list of items
         list_2 (list): A list of items
 
     Returns:
-        tuple: The respectives lists but of equal length, imputed with None.
+        tuple: The respective lists but of equal length, imputed with None.
     """
     list_1 = list_1 if list_1 else []
     list_2 = list_2 if list_2 else []
@@ -99,7 +99,7 @@ def validate_resource(resource: dict) -> bool:
         resource (dict): A dictionary representing a FHIR R4B resource.
 
     Returns:
-        bool: True if the resource was succesfully parsed, False otherwise.
+        bool: True if the resource was successfully parsed, False otherwise.
     """
     assert "resourceType" in resource.keys(), "resourceType unspecified"
     try:
@@ -148,7 +148,7 @@ def fhirtype_is_leaf(fhirtype) -> bool:
 
 
 def map_align_arrays(arr1, arr2):
-    """Maps two arrays to eachother and aligns them in corresponding order.
+    """Maps two arrays to each other and aligns them in corresponding order.
 
     Args:
         arr1 (list): list of fhir elements

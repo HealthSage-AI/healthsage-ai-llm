@@ -13,7 +13,7 @@ def dict_to_html(fhir_dict: dict) -> str:
     Returns:
         str: HTML string with FHIR data, where newlines and tabs are replaced by <br> and spaces.
     """
-    if type(fhir_dict) == defaultdict:
+    if isinstance(fhir_dict, defaultdict):
         fhir_dict = dict(fhir_dict)
     printer = pprint.PrettyPrinter(depth=1)
     dict_pretty = printer.pformat(fhir_dict)
@@ -31,10 +31,10 @@ def dict_to_html(fhir_dict: dict) -> str:
 
 
 def preprocess_for_treemap(diff: FhirDiff):
-    """Flattens a nested comparison object for plotly treemaps
+    """Flattens a nested FhirDiff object for plotly treemaps
 
     Args:
-        comparison (FhirComparison): FhirComparison object
+        comparison (FhirDiff): FhirDiff object
 
     Returns:
         (labels, parents, values):
