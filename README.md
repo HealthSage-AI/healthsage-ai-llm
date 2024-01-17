@@ -11,10 +11,10 @@ The model is optimized to process English notes and populate 10 FHIR resource ty
 
 This repository consists of the following modules:
 
-- training - all scripts that have been used to train the model.
-- evaluation - specifically validate the FHIR Resources for adherence to the FHIR specification.
-- inference - running inference on the model, either locally or in a containerized environment.
-- demo - a simple demo of the system, using a docker-compose setup.
+- note_to_fhir.evaluation - compare generated FHIR resources against ground truth/reference resource.
+- note_to_fhir.inference - running inference on the model, either locally or in a containerized environment.
+
+Usage examples for both can be found in the jupyter notebooks in the docs folder.
 
 The easiest way to get started is to run one of the Jupyter Notebooks on Google Colab and other services, e.g. for inference:
 
