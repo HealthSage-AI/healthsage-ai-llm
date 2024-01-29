@@ -25,6 +25,25 @@ A decent GPU is required for this step.
 
 Lastly, you could fine-tune the model on your own data by modifying the training scripts and running them on a GPU.
 
+## Evaluation of accuracy
+
+Our evaluation tool makes it easy to quantify and inspect the accuracy of generated FHIR resources w.r.t. a ground truth FHIR resource.
+For that we designed the FhirScore and FhirDiff models as well as several functions to process and visualize these models. 
+
+```python
+from src.note_to_fhir.evaluation.datamodels import FhirScore, FhirDiff
+from src.note_to_fhir.evaluation.utils import get_diff, diff_to_dataframe
+from src.note_to_fhir.evaluation.visuals import show_diff
+
+fhir_true, fhir_pred = load_evaluation_dataset()  # Placeholder load dataset function
+
+diff = get_diff(fhir_true, fhir_pred, resource_type="Bundle")
+show_diff(diff)
+```
+<img width="756" alt="image" src="https://github.com/HealthSage-AI/healthsage-ai-llm/assets/96254933/2dbdbb5a-c603-42ac-969f-7a78e00a4fde">
+
+For a more elaborate walkthrough, see **docs/evaluation.ipynb**
+
 ## Published resources
 
 The data sets and models are regularly published to [HuggingFace](https://huggingface.co/healthsageai).
