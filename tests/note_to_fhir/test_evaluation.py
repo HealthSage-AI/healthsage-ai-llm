@@ -49,6 +49,33 @@ def test_fhirdiff_encounter() -> FhirDiff:
     assert diff.score.accuracy > 0.0 and diff.score.accuracy < 1.0
     return diff
 
+def test_fhirdiff_edge_case_1() -> FhirDiff:
+    fhir_pred = {'resourceType': 'Observation',
+            'id': '1',
+            'status': 'final',
+            'category': [{'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/observation-category',
+                'code': 'vital-signs',
+                'display': 'Vital signs'}]}],
+            'code': {'coding': [{'system': 'http://loinc.org',
+                'display': 'Body mass index (BMI) [Ratio]'}],
+            'text': 'Body mass index (BMI) [Ratio]'},
+            'subject': {'reference': 'Patient/1'},
+            'effectiveDateTime': '2021-06-06T19:50:28+02:00',
+            'issued': None,
+            'valueQuantity': {'value': 30.7,
+            'unit': 'kg/m2',
+            'system': 'http://unitsofmeasure.org',
+            'code': 'kg/m2'}}
+    fhir_true = {'resourceType': 'Procedure',
+            'id': '1',
+            'status': 'unknown',
+            'code': {'coding': [{'system': 'http://snomed.info/sct',
+                'display': 'History AND physical examination (procedure)'}],
+            'text': 'History AND physical examination (procedure)'},
+            'subject': {'reference': 'Patient/1'},
+            'performedPeriod': None}
+    get_diff(fhir_true, fhir_pred, resource_type="Procedure")
+
 
 def test_diff_to_list():
     diff = test_fhirdiff()
@@ -63,6 +90,7 @@ def test_diff_to_dataframe():
 
 
 if __name__ == "__main__":
+    test_fhirdiff_edge_case_1()
     test_fhirdiff()
     test_fhirdiff_encounter()
     test_diff_to_list()

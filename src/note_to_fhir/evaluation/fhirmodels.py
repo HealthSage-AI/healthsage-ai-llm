@@ -35,10 +35,10 @@ from fhir.resources.R4B.identifier import Identifier
 from fhir.resources.R4B.bundle import Bundle, BundleEntry
 from fhir.resources.R4B.organization import Organization
 from fhir.resources.R4B.practitioner import Practitioner
-from fhir.resources.R4B.procedure import Procedure
+from fhir.resources.R4B.procedure import Procedure, ProcedurePerformer
 from fhir.resources.R4B.condition import Condition
-from fhir.resources.R4B.immunization import Immunization
-from fhir.resources.R4B.observation import Observation
+from fhir.resources.R4B.immunization import Immunization, ImmunizationProtocolApplied
+from fhir.resources.R4B.observation import Observation, ObservationComponent
 from fhir.resources.R4B.medication import Medication
 from fhir.resources.R4B.quantity import Quantity
 from fhir.resources.R4B.resource import Resource
@@ -72,4 +72,7 @@ object_mapping = {
     "Quantity": Quantity,
     "Resource": Resource,
     "AllergyIntoleranceReaction": AllergyIntoleranceReaction,
+    "ProcedurePerformer": ProcedurePerformer,
+    "ImmunizationProtocolApplied": ImmunizationProtocolApplied,
+    "ObservationComponent": ObservationComponent
 }

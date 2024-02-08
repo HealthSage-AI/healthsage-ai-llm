@@ -16,12 +16,12 @@
 import json
 from src.note_to_fhir.evaluation.datamodels import FhirScore, ElementDetails, FhirDiff
 from src.note_to_fhir.evaluation.fhirmodels import object_mapping
-
 from typing import List
 import warnings
 from collections import defaultdict
 from pydantic.v1.main import ModelMetaclass
 import pandas as pd
+import itertools
 
 
 def get_resource_details(Resource) -> List[ElementDetails]:
@@ -160,8 +160,67 @@ def map_align_arrays(arr1, arr2):
     warnings.warn("NotImplemented; arrays are assumed to be in identical order.")
     return match_list_len(arr1, arr2)
 
+def optimize_array_order(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails, max_perms=5040) -> tuple:
+    """Finds the list order for fhir_pred the results in the highest accuracy by calculating all permutations
 
-def convert_to_defaultdict(obj) -> defaultdict:
+    Args:
+        fhir_true_array (list): list of Fhir resources
+        fhir_pred_array (list): list of Fhir resources to optimize
+        element_details (ElementDetails): metadata
+        max_perms (int): maximum permutations to consider, defaults to 5040 (7!)
+    """
+    assert isinstance(fhir_true_array, list) and isinstance(fhir_pred_array, list), (fhir_true_array, fhir_pred_array)
+    fhir_pred_child_permutations = [list(permutation) for permutation in itertools.permutations(fhir_pred_array)][:max_perms]
+    max_idx = -1
+    max_accuracy = 0.
+    for i, permutation in enumerate(fhir_pred_child_permutations):
+        score = _get_array_score(fhir_true_array, permutation, element_details)
+        if score.accuracy > max_accuracy:
+            max_idx = i
+            max_accuracy = score.accuracy
+    fhir_pred_child_max = fhir_pred_child_permutations[max_idx]
+    return fhir_true_array, fhir_pred_child_max
+
+def _get_array_score(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails) -> FhirScore:
+    """Calculate FhirScore of fhir_pred_array in that particular order
+
+    Args:
+        fhir_true_array (list): list of Fhir resources
+        fhir_pred_array (list): list of Fhir resources to optimize
+        element_details (ElementDetails): metadata
+
+    Returns:
+        FhirScore: FhirScore of fhir_pred_array in that particular order
+    """
+    i = 0
+    childscore = FhirScore()
+    for fhir_true_child_item, fhir_pred_child_item in zip(
+        fhir_true_array, fhir_pred_array
+    ):
+        childdiff_item = FhirDiff(
+            fhir_true=fhir_true_child_item,
+            fhir_pred=fhir_pred_child_item,
+            resource_name=element_details.array_item_type,
+            parent=None,
+            entry_nr=str(i),
+            key=element_details.key,
+        )
+        childdiff_item = _expand_diff_tree(childdiff_item)
+        childscore = childscore + childdiff_item.score
+        i += 1
+    return childscore
+
+
+
+def convert_to_defaultdict(obj) -> any:
+    """Convert dict to default dict, if it's a dict
+
+    Args:
+        obj (any): _description_
+
+    Returns:
+        any: defaultdict if the input was a dict, else just returns the input
+    """
     if isinstance(obj, dict) or obj is None:
         return defaultdict(dict, obj) if obj else defaultdict(dict)
     else:
@@ -228,7 +287,7 @@ def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
     resource_type = get_resource_type(diff.fhir_true, diff.resource_name)
 
     if fhirtype_is_leaf(resource_type):
-        diff.score = compare_leaf(diff.fhir_true, diff.fhir_pred)
+        diff.score = compare_leaf(diff)
         return diff
 
     Resource = get_resource_class(
@@ -290,9 +349,7 @@ def _expand_diff_tree_leaf(diff: FhirDiff, element_details: ElementDetails):
         parent=diff,
         key=element_details.key,
     )
-    childscore = compare_leaf(
-        diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key]
-    )
+    childscore = compare_leaf(childdiff)
     childdiff.score = childscore
     diff.children[element_details.key] = childdiff
 
@@ -304,6 +361,8 @@ def _expand_diff_tree_struct(diff: FhirDiff, element_details: ElementDetails):
         diff (FhirDiff): _description_
         element_details (ElementDetails): _description_
     """
+    if not isinstance(diff.fhir_pred[element_details.key], dict):
+        diff.fhir_pred[element_details.key]= {}
     childdiff = FhirDiff(
         fhir_true=diff.fhir_true[element_details.key],
         fhir_pred=diff.fhir_pred[element_details.key],
@@ -322,12 +381,13 @@ def _expand_diff_tree_array(diff: FhirDiff, element_details: ElementDetails):
         diff (FhirDiff): _description_
         element_details (ElementDetails): _description_
     """
-    if diff.fhir_pred == {}:
+    if not isinstance(diff.fhir_pred[element_details.key], list):
         diff.fhir_pred[element_details.key] = []
     diff.children[element_details.key] = []
-    fhir_true_child, fhir_pred_child = match_list_len(
-        diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key]
-    )
+    fhir_true_child, fhir_pred_child = diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key]
+    fhir_true_child, fhir_pred_child = match_list_len(fhir_true_child, fhir_pred_child)
+    if len(fhir_true_child) > 1 or len(fhir_pred_child) > 1:
+        fhir_true_child, fhir_pred_child = optimize_array_order(fhir_true_child, fhir_pred_child, element_details)
 
     i = 0
     childscore = FhirScore()
@@ -347,8 +407,42 @@ def _expand_diff_tree_array(diff: FhirDiff, element_details: ElementDetails):
         childscore = childscore + childdiff_item.score
         i += 1
 
+def remove_id_from_reference(reference: str):
+    """Remove id from reference for evaluation. 
+    
+    Args:
+        reference (str): Reference to another FHIR resource, e.g. "Patient/1", "Encounter/2" etc.
 
-def compare_leaf(element_true: any, element_pred: any) -> FhirScore:
+    Returns:
+        str: Reference without the id, e.g. "Patient", "Encounter"
+    """
+    if "/" in reference:
+        return reference.split("/")[0]
+    else:
+        return reference
+    
+def element_is_absent(leaf: any) -> bool:
+    """Check if an element is semantically null/None, taking into account different types.
+
+    Args:
+        leaf (any): The value of a Fhir Element
+
+    Returns:
+        bool: True if the leaf is empty, False otherwise
+    """
+    if leaf is None:
+        return True
+    if leaf == "":
+        return True
+    if leaf == []:
+        return True
+    if leaf == {}:
+        return True
+    else:
+        return False
+
+
+def compare_leaf(diff: FhirDiff) -> FhirScore:
     """Compares two leaf nodes of a FHIR structure
 
     Args:
@@ -358,12 +452,17 @@ def compare_leaf(element_true: any, element_pred: any) -> FhirScore:
     Returns:
         FhirScore: object containing score for the leaf node.
     """
+    element_true, element_pred = diff.fhir_true, diff.fhir_pred
+    if diff.key == "id":
+        return FhirScore()
+    if diff.key == "reference":
+        element_true, element_pred = remove_id_from_reference(element_true), remove_id_from_reference(element_pred)
     assert not (
         element_pred is None and element_true is None
     ), "Element can't both be None for comparison"
-    if not element_pred:
+    if element_is_absent(element_pred):
         fhirscore = FhirScore(n_deletions=1, n_leaves=1)  # miss
-    elif not element_true:
+    elif element_is_absent(element_pred):
         fhirscore = FhirScore(n_additions=1, n_leaves=1)  # hallucination
     elif element_true != element_pred:
         fhirscore = FhirScore(n_modifications=1, n_leaves=1)  # mistake
