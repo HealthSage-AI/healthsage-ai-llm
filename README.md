@@ -11,8 +11,8 @@ The model is optimized to process English notes and populate 10 FHIR resource ty
 
 This repository consists of the following modules:
 
-- note_to_fhir.evaluation - compare generated FHIR resources against ground truth/reference resource.
-- note_to_fhir.inference - running inference on the model, either locally or in a containerized environment.
+- src.note_to_fhir.evaluation - compare generated FHIR resources against ground truth/reference resource.
+- src.note_to_fhir.inference - running inference on the model, either locally or in a containerized environment.
 
 Usage examples for both can be found in the jupyter notebooks in the docs folder.
 
@@ -20,10 +20,17 @@ The easiest way to get started is to run one of the Jupyter Notebooks on Google 
 
 [![Open inference-note-to-fhir-colab-notebook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/healthsage-ai/healthsage-ai-llm/blob/main/docs/inference-note-to-fhir-colab-notebook.ipynb)
 
-A second step could be to deploy the starter kit for an end to end demo of the system: `docker compose -p demo up`.
-A decent GPU is required for this step.
+## Inference: Note to FHIR
 
-Lastly, you could fine-tune the model on your own data by modifying the training scripts and running them on a GPU.
+You can do Note-to-fhir inference using our NoteToFhir class:
+
+```python
+from src.note_to_fhir.inference import NoteToFhir13b
+
+model = NoteToFhir13b()  # NoteToFhir8x7b coming soon
+model.translate("Patient John Doe lives in Amsterdam")
+```
+
 
 ## Evaluation of accuracy
 
