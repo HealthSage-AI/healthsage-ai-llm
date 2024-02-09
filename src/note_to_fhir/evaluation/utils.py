@@ -305,8 +305,7 @@ def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
         ):
             continue
         if (
-            diff.fhir_true[element_details.key] is None
-            and diff.fhir_pred[element_details.key] is None
+            element_is_absent(diff.fhir_true[element_details.key]) and element_is_absent(diff.fhir_true[element_details.key])
         ):
             continue
 
