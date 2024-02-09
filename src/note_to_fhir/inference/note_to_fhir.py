@@ -61,7 +61,7 @@ class NoteToFhir(object):
             max_length=4096
         )
 
-    def note_to_fhir(self, note : str) -> dict:
+    def translate(self, note : str) -> dict:
         """Convert a note to FHIR
 
         Args:
@@ -69,8 +69,7 @@ class NoteToFhir(object):
         """
         prompt = self.template.format(note=note)
         generated_output = self.generator(prompt)
-        fhir_json = parse_note_to_fhir(generated_output[0]['generated_text'])
-        fhir = json.loads(fhir_json)
+        fhir = parse_note_to_fhir(generated_output[0]['generated_text'])
         fhir = drop_nones(fhir)
         fhir = drop_snomed_loinc(fhir)
         return fhir
