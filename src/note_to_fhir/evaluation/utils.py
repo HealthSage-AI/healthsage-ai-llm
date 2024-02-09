@@ -457,9 +457,8 @@ def compare_leaf(diff: FhirDiff) -> FhirScore:
         return FhirScore()
     if diff.key == "reference":
         element_true, element_pred = remove_id_from_reference(element_true), remove_id_from_reference(element_pred)
-    assert not (
-        element_pred is None and element_true is None
-    ), "Element can't both be None for comparison"
+    if element_is_absent(element_pred) and element_is_absent(element_true):
+        fhirscore = FhirScore()
     if element_is_absent(element_pred):
         fhirscore = FhirScore(n_deletions=1, n_leaves=1)  # miss
     elif element_is_absent(element_pred):
