@@ -36,16 +36,18 @@ class FhirScore(BaseModel):
     @computed_field
     @property
     def precision(self) -> float:  # What % of generated FHIR was correct
-        if self.n_leaves == 0:
+        total = self.n_matches + self.n_additions + self.n_modifications
+        if total == 0:
             return None
-        return self.n_matches / (self.n_matches + self.n_additions + self.n_modifications)
+        return self.n_matches / total
 
     @computed_field
     @property
     def recall(self) -> float:  # What % of reference FHIR was correctly generated
-        if self.n_leaves == 0:
+        total = self.n_matches + self.n_deletions + self.n_modifications
+        if total == 0:
             return None
-        return self.n_matches / (self.n_matches + self.n_deletions + self.n_modifications)
+        return self.n_matches / total
 
     def __add__(self, other: "FhirScore"):
         if not isinstance(other, FhirScore):
