@@ -51,3 +51,16 @@ def parse_json(s) -> str:
         return substring
     else:
         return "{}"
+    
+def parse_note_to_fhir(s) -> dict:
+    """Parse FHIR JSON string from Note-to-Fhir output
+
+    Args:
+        s (_type_): _description_
+
+    Returns:
+        dict: _description_
+    """
+    fhir_json = s.split("```")[3][4:].strip(" \t\n\r")
+    fhir = json.loads(fhir_json)
+    return fhir

@@ -1,4 +1,4 @@
-template = """Translate the following clinical note into HL7 FHIR R4 Format. 
+gpt_template = """Translate the following clinical note into HL7 FHIR R4 Format. 
 instructions: 
 - Do not insert any values that are not in the note. 
 - Do not infer or impute any values
@@ -34,6 +34,29 @@ CLINICAL NOTE
 {note}
 
 [/INST]
+~
+"""
+
+mixtral_template = """[INST]
+INSTRUCTION
+Translate the following clinical note into HL7 FHIR R4 Format. 
+- Do not insert any values that are not in the note. 
+- Do not infer or impute any values
+- Only include information that is essential:
+    - information that is in the clinical note
+    - information that is mandatory for a valid FHIR resource.
+
+OUTPUT FORMAT
+Return the HL7 FHIR structured information as a json string. denote the start and end of the json with a markdown codeblock:
+```json 
+[RESOURCE HERE]
+```
+
+CLINICAL NOTE
+{note}
+
+[/INST]
+~
 """
 
 resource_to_note_template = """
@@ -53,3 +76,9 @@ Details:
 - {custom_detail_2}
 - {custom_detail_3}
 """
+
+template_dict = {
+    "llama": llama_template,
+    "mixtral": mixtral_template,
+    "gpt": gpt_template
+}

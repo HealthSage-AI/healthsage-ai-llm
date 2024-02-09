@@ -29,21 +29,23 @@ class FhirScore(BaseModel):
     @computed_field
     @property
     def accuracy(self) -> float:  # The overall accuracy
-        return self.n_matches / max(self.n_leaves, 1)
+        if self.n_leaves == 0:
+            return None
+        return self.n_matches / self.n_leaves
 
     @computed_field
     @property
     def precision(self) -> float:  # What % of generated FHIR was correct
-        return self.n_matches / max(
-            self.n_matches + self.n_additions + self.n_modifications, 1
-        )
+        if self.n_leaves == 0:
+            return None
+        return self.n_matches / (self.n_matches + self.n_additions + self.n_modifications)
 
     @computed_field
     @property
     def recall(self) -> float:  # What % of reference FHIR was correctly generated
-        return self.n_matches / max(
-            self.n_matches + self.n_deletions + self.n_modifications, 1
-        )
+        if self.n_leaves == 0:
+            return None
+        return self.n_matches / (self.n_matches + self.n_deletions + self.n_modifications)
 
     def __add__(self, other: "FhirScore"):
         if not isinstance(other, FhirScore):
@@ -75,8 +77,8 @@ class ElementDetails(BaseModel):
 
 
 class FhirDiff(BaseModel):
-    fhir_true: Any
-    fhir_pred: Any
+    fhir_true: Any = Field(repr=False)
+    fhir_pred: Any = Field(repr=False)
     resource_name: str  # resource type or fhir type
     parent: Optional["FhirDiff"] = Field(default_factory=lambda: None, repr=False)
     children: dict = Field(default_factory=dict, repr=False)
@@ -112,3 +114,4 @@ class FhirDiff(BaseModel):
         if v is None:
             return defaultdict(lambda: {})
         return v
+    
