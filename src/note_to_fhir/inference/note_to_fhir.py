@@ -22,14 +22,15 @@ from src.note_to_fhir.parsers import parse_note_to_fhir
 
 class NoteToFhir(object):
 
-    def __init__(self, model_name: str, adapter_name: str, template_key: str) -> None:
+    def __init__(self, model_name: str, adapter_name: str, template_style: str) -> None:
         """_summary_
 
         Args:
             model_name (str or os.PathLike): The base model
             adapter_name (str or os.PathLike): The Q-LoRA adapter
+            template_style (str): "gpt", "llama" or "mixtral"
         """
-        self.template = template_dict[template_key]
+        self.template = template_dict[template_style]
         bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_use_double_quant=True,
@@ -73,3 +74,17 @@ class NoteToFhir(object):
         fhir = drop_nones(fhir)
         fhir = drop_snomed_loinc(fhir)
         return fhir
+    
+class NoteToFhir13b(NoteToFhir):
+
+    def __init__(self):
+        super().__init__(model_name="meta-llama/Llama-2-13b-chat-hf",
+                        adapter_name="healthsageai/note-to-fhir-13b-adapter",
+                        template_style="llama")
+        
+class NoteToFhir8x7b(NoteToFhir):
+
+    def __init__(self):
+        super().__init__(model_name="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                        adapter_name="healthsageai/note-to-fhir-8x7b-mixtral-dev",
+                        template_style="mixtral")
