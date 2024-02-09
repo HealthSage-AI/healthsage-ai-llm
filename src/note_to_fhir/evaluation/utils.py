@@ -459,7 +459,7 @@ def compare_leaf(diff: FhirDiff) -> FhirScore:
         element_true, element_pred = remove_id_from_reference(element_true), remove_id_from_reference(element_pred)
     if element_is_absent(element_pred) and element_is_absent(element_true):
         fhirscore = FhirScore()
-    if element_is_absent(element_pred):
+    elif element_is_absent(element_pred):
         fhirscore = FhirScore(n_deletions=1, n_leaves=1)  # miss
     elif element_is_absent(element_pred):
         fhirscore = FhirScore(n_additions=1, n_leaves=1)  # hallucination
