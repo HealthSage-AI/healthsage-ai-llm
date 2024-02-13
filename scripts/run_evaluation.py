@@ -1,6 +1,4 @@
 import json
-import sys
-import os
 from healthsageai.note_to_fhir.evaluation.utils import get_diff, diff_to_dataframe  # noqa: E402
 from datasets import load_dataset  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
