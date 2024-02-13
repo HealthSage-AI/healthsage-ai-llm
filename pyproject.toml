@@ -3,8 +3,8 @@ requires = ["setuptools>=40.6.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "note_to_fhir"
-version = "0.1"
+name = "healthsageai"
+version = "0.1.0"
 description = "HealthSage AI LLMs, Healthcare genAI platform"
 readme = "README.md"
 
@@ -48,7 +48,8 @@ dependencies = [
   "pydantic==2.5.2",
   "torch",
   "pytorch-gpu",
-  "python-dotenv"
+  "python-dotenv",
+  "marko"
 ]
 
 [project.urls]
