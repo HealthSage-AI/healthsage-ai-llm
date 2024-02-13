@@ -1,9 +1,9 @@
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from src.note_to_fhir.evaluation.datamodels import FhirDiff  # noqa: E402
-from src.note_to_fhir.evaluation.utils import get_diff, diff_to_list, diff_to_dataframe  # noqa: E402
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+from healthsageai.note_to_fhir.evaluation.datamodels import FhirDiff  # noqa: E402
+from healthsageai.note_to_fhir.evaluation.utils import get_diff, diff_to_list, diff_to_dataframe  # noqa: E402
 from datasets import load_dataset  # noqa: E402
 import json  # noqa: E402
 

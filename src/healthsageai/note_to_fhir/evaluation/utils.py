@@ -14,8 +14,8 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
-from src.note_to_fhir.evaluation.datamodels import FhirScore, ElementDetails, FhirDiff
-from src.note_to_fhir.evaluation.fhirmodels import object_mapping
+from healthsageai.note_to_fhir.evaluation.datamodels import FhirScore, ElementDetails, FhirDiff
+from healthsageai.note_to_fhir.evaluation.fhirmodels import object_mapping
 from typing import List
 import warnings
 from collections import defaultdict

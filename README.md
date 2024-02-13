@@ -18,7 +18,7 @@ Usage examples for both can be found in the jupyter notebooks in the docs folder
 
 The easiest way to get started is to run one of the Jupyter Notebooks on Google Colab and other services, e.g. for inference:
 
-[![Open inference-note-to-fhir-colab-notebook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/healthsage-ai/healthsage-ai-llm/blob/main/docs/inference-note-to-fhir-colab-notebook.ipynb)
+[![Open inference-note-to-fhir-colab-notebook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/healthsage-ai/healthsage-ai-llm/blob/user_friendliness/docs/inference-note-to-fhir-colab-notebook.ipynb)
 
 ## Inference: Note to FHIR
 

@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 from collections import defaultdict
-from src.note_to_fhir.evaluation.datamodels import FhirDiff
+from healthsageai.note_to_fhir.evaluation.datamodels import FhirDiff
 import pprint
 
 

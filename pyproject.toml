@@ -1,14 +1,18 @@
+[build-system]
+requires = ["setuptools>=40.6.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "healthsageai_note-to-fhir"
+name = "note_to_fhir"
 version = "0.1"
-description = "HealthSage AI LLM - from clinical note to FHIR"
+description = "HealthSage AI LLMs, Healthcare genAI platform"
 readme = "README.md"
 
 requires-python = ">=3.9"
 
 license = {file = "LICENSE"}
 
-keywords = ["NLP", "machine learning", "pytorch", "fhir"]
+keywords = ["NLP", "machine learning", "pytorch", "fhir", "llm", "llama", "mixtral", "IE", "genAI"]
 
 authors = [
   {name = "HealthSage AI", email = "hello@healthsage.ai" }
@@ -34,30 +38,21 @@ classifiers = [  # Optional
 ]
 
 dependencies = [
-  # use dependency groups below
+  "fhir.resources",
+  "pandas",
+  "transformers",
+  "datasets",
+  "numpy",
+  "scikit-learn",
+  "matplotlib",
+  "pydantic==2.5.2",
+  "torch",
+  "pytorch-gpu",
+  "python-dotenv"
 ]
-
-#   $ pip install healthsageai-note-to-fhir[training]
-#   $ pip install healthsageai-note-to-fhir[inference]
-[project.optional-dependencies]
-training = ['torch', 'pytorch-gpu']
-inference = []
-demo = ['requests', 'gradio']
 
 [project.urls]
 "Homepage" = "https://github.com/healthsageai/healthsageai-note-to-fhir"
 "Bug Reports" = "https://github.com/healthsageai/healthsageai-note-to-fhir/issues"
 "Source" = "https://github.com/healthsageai/healthsageai-note-to-fhir/"
-
-[project.scripts]
-run_evaluation = "note_to_fhir.evaluation.run_evaluation:main"
-
-[tool.setuptools]
-
-package-data = {}
-
-[build-system]
-# These are the assumed default build requirements from pip:
-requires = ["setuptools>=43.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
 
