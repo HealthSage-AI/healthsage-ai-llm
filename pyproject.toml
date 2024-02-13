@@ -51,7 +51,8 @@ dependencies = [
   "python-dotenv",
   "marko",
   "peft",
-  "bitsandbytes"
+  "bitsandbytes",
+  "accelerate"
 ]
 
 [project.urls]
