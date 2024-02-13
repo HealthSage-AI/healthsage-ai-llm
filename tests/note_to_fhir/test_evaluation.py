@@ -1,9 +1,5 @@
-import sys
-import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from src.note_to_fhir.evaluation.datamodels import FhirDiff  # noqa: E402
-from src.note_to_fhir.evaluation.utils import get_diff, diff_to_list, diff_to_dataframe  # noqa: E402
+from healthsageai.note_to_fhir.evaluation.datamodels import FhirDiff  # noqa: E402
+from healthsageai.note_to_fhir.evaluation.utils import get_diff, diff_to_list, diff_to_dataframe  # noqa: E402
 from datasets import load_dataset  # noqa: E402
 import json  # noqa: E402
 
@@ -49,7 +45,15 @@ def test_fhirdiff_encounter() -> FhirDiff:
     assert diff.score.accuracy > 0.0 and diff.score.accuracy < 1.0
     return diff
 
-def test_fhirdiff_edge_case_1() -> FhirDiff:
+def test_fhirdiff_edge_case() -> FhirDiff:
+    fhir_true = {'resourceType': 'Procedure',
+            'id': '1',
+            'status': 'unknown',
+            'code': {'coding': [{'system': 'http://snomed.info/sct',
+                'display': 'History AND physical examination (procedure)'}],
+            'text': 'History AND physical examination (procedure)'},
+            'subject': {'reference': 'Patient/1'},
+            'performedPeriod': None}
     fhir_pred = {'resourceType': 'Observation',
             'id': '1',
             'status': 'final',
@@ -66,14 +70,6 @@ def test_fhirdiff_edge_case_1() -> FhirDiff:
             'unit': 'kg/m2',
             'system': 'http://unitsofmeasure.org',
             'code': 'kg/m2'}}
-    fhir_true = {'resourceType': 'Procedure',
-            'id': '1',
-            'status': 'unknown',
-            'code': {'coding': [{'system': 'http://snomed.info/sct',
-                'display': 'History AND physical examination (procedure)'}],
-            'text': 'History AND physical examination (procedure)'},
-            'subject': {'reference': 'Patient/1'},
-            'performedPeriod': None}
     get_diff(fhir_true, fhir_pred, resource_type="Procedure")
 
 
@@ -90,7 +86,7 @@ def test_diff_to_dataframe():
 
 
 if __name__ == "__main__":
-    test_fhirdiff_edge_case_1()
+    test_fhirdiff_edge_case()
     test_fhirdiff()
     test_fhirdiff_encounter()
     test_diff_to_list()

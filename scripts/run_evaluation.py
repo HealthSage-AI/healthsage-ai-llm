@@ -1,15 +1,10 @@
 import json
-import sys
-import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from src.note_to_fhir.evaluation.utils import get_diff, diff_to_dataframe  # noqa: E402
-from src.note_to_fhir.evaluation.visuals import show_diff  # noqa: E402
+from healthsageai.note_to_fhir.evaluation.utils import get_diff, diff_to_dataframe  # noqa: E402
 from datasets import load_dataset  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
-testset = load_dataset("healthsage/example_fhir_output")
+testset = load_dataset("healthsageai/example_fhir_output")
 
 
 

@@ -15,10 +15,9 @@
 
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
-import json
-from src.note_to_fhir.data_utils import drop_snomed_loinc, drop_nones
-from src.note_to_fhir.templates.simple import template_dict
-from src.note_to_fhir.parsers import parse_note_to_fhir
+from healthsageai.note_to_fhir.data_utils import drop_snomed_loinc, drop_nones
+from healthsageai.note_to_fhir.templates.simple import template_dict
+from healthsageai.note_to_fhir.parsers import parse_note_to_fhir
 
 class NoteToFhir(object):
 
