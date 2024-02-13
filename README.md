@@ -18,14 +18,14 @@ Usage examples for both can be found in the jupyter notebooks in the docs folder
 
 The easiest way to get started is to run one of the Jupyter Notebooks on Google Colab and other services, e.g. for inference:
 
-[![Open inference-note-to-fhir-colab-notebook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/healthsage-ai/healthsage-ai-llm/blob/user_friendliness/docs/inference-note-to-fhir-colab-notebook.ipynb)
+[![Open inference-note-to-fhir-colab-notebook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/healthsage-ai/healthsage-ai-llm/blob/main/docs/inference-note-to-fhir-colab-notebook.ipynb)
 
 ## Inference: Note to FHIR
 
 You can do Note-to-fhir inference using our NoteToFhir class:
 
 ```python
-from src.note_to_fhir.inference import NoteToFhir13b
+from healthsageai.note_to_fhir.inference import NoteToFhir13b
 
 model = NoteToFhir13b()  # NoteToFhir8x7b coming soon
 model.translate("Patient John Doe lives in Amsterdam")
@@ -38,9 +38,9 @@ Our evaluation tool makes it easy to quantify and inspect the accuracy of genera
 For that we designed the FhirScore and FhirDiff models as well as several functions to process and visualize these models. 
 
 ```python
-from src.note_to_fhir.evaluation.datamodels import FhirScore, FhirDiff
-from src.note_to_fhir.evaluation.utils import get_diff, diff_to_dataframe
-from src.note_to_fhir.evaluation.visuals import show_diff
+from healthsageai.note_to_fhir.evaluation.datamodels import FhirScore, FhirDiff
+from healthsageai.note_to_fhir.evaluation.utils import get_diff, diff_to_dataframe
+from healthsageai.note_to_fhir.evaluation.visuals import show_diff
 
 fhir_true, fhir_pred = load_evaluation_dataset()  # Placeholder load dataset function
 
