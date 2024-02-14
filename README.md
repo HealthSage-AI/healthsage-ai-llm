@@ -11,8 +11,8 @@ The model is optimized to process English notes and populate 10 FHIR resource ty
 
 This repository consists of the following modules:
 
-- src.note_to_fhir.evaluation - compare generated FHIR resources against ground truth/reference resource.
-- src.note_to_fhir.inference - running inference on the model, either locally or in a containerized environment.
+- healthsageai.note_to_fhir.evaluation - compare generated FHIR resources against ground truth/reference resource.
+- healthsageai.note_to_fhir.inference - running inference on the model, either locally or in a containerized environment.
 
 Usage examples for both can be found in the jupyter notebooks in the docs folder.
 
