@@ -27,7 +27,7 @@ You can do Note-to-fhir inference using our NoteToFhir class:
 ```python
 from healthsageai.note_to_fhir.inference import NoteToFhir13b
 
-model = NoteToFhir13b()  # NoteToFhir8x7b coming soon
+model = NoteToFhir13b()
 model.translate("Patient John Doe lives in Amsterdam")
 ```
 
