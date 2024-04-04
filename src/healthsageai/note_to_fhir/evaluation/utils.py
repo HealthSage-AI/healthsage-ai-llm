@@ -22,6 +22,9 @@ from collections import defaultdict
 from pydantic.v1.main import ModelMetaclass
 import pandas as pd
 import itertools
+import numpy as np
+
+MAX_PERMUTATIONS_ARRAY_SIZE = 5  # When all permutations have to be calculated
 
 
 def get_resource_details(Resource) -> List[ElementDetails]:
@@ -144,7 +147,7 @@ def fhirtype_is_leaf(fhirtype) -> bool:
     Returns:
         bool: True if fhirtype is leaf, False otherwise
     """
-    return fhirtype in ["boolean", "integer", "string", "decimal"]
+    return fhirtype in ["boolean", "integer", "string", "decimal", "number"]
 
 
 def map_align_arrays(arr1, arr2):
@@ -160,17 +163,22 @@ def map_align_arrays(arr1, arr2):
     warnings.warn("NotImplemented; arrays are assumed to be in identical order.")
     return match_list_len(arr1, arr2)
 
-def optimize_array_order(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails, max_perms=5040) -> tuple:
+def optimize_array_order(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails) -> tuple:
+    if len(fhir_true_array) <= MAX_PERMUTATIONS_ARRAY_SIZE:
+        return optimize_array_order_exact(fhir_true_array, fhir_pred_array, element_details)  # scales n!
+    else:
+        return optimize_array_order_approx(fhir_true_array, fhir_pred_array, element_details)  # scales n**2
+
+def optimize_array_order_exact(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails) -> tuple:
     """Finds the list order for fhir_pred the results in the highest accuracy by calculating all permutations
 
     Args:
         fhir_true_array (list): list of Fhir resources
         fhir_pred_array (list): list of Fhir resources to optimize
         element_details (ElementDetails): metadata
-        max_perms (int): maximum permutations to consider, defaults to 5040 (7!)
     """
     assert isinstance(fhir_true_array, list) and isinstance(fhir_pred_array, list), (fhir_true_array, fhir_pred_array)
-    fhir_pred_child_permutations = [list(permutation) for permutation in itertools.permutations(fhir_pred_array)][:max_perms]
+    fhir_pred_child_permutations = [list(permutation) for permutation in itertools.permutations(fhir_pred_array)]
     max_idx = -1
     max_accuracy = 0.
     for i, permutation in enumerate(fhir_pred_child_permutations):
@@ -180,6 +188,56 @@ def optimize_array_order(fhir_true_array: list, fhir_pred_array: list, element_d
             max_accuracy = score.accuracy
     fhir_pred_child_max = fhir_pred_child_permutations[max_idx]
     return fhir_true_array, fhir_pred_child_max
+
+def optimize_array_order_approx(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails) -> tuple:
+    """Finds the list order for fhir_pred the results in the highest accuracy using argmax with penalties
+
+    Args:
+        fhir_true_array (list): _description_
+        fhir_pred_array (list): _description_
+        element_details (ElementDetails): _description_
+
+    Returns:
+        tuple: _description_
+    """
+    accuracy_matrix = pd.DataFrame(0., index=np.arange(len(fhir_true_array)), columns=np.arange(len(fhir_pred_array)))
+    for i_true, fhir_true in enumerate(fhir_true_array):
+        for i_pred, fhir_pred in enumerate(fhir_pred_array):
+            diff = FhirDiff(
+            fhir_true=fhir_true,
+            fhir_pred=fhir_pred,
+            resource_name=element_details.array_item_type,
+            parent=None,
+            key=element_details.key,
+            )
+            diff = _expand_diff_tree(diff)
+            accuracy_matrix.iloc[i_true, i_pred] = diff.score.accuracy
+
+    optimal_order = get_optimal_order(accuracy_matrix)
+    fhir_pred_array_max = []
+    for target_idx in optimal_order:
+        fhir_pred_array_max.append(fhir_pred_array[target_idx])
+
+    return fhir_true_array, fhir_pred_array_max
+
+
+def get_optimal_order(accuracy_matrix):
+    """
+
+    Args:
+        matrix (_type_): _description_
+    """
+    epsilon = 0.01
+    marginal_distribution_pred = accuracy_matrix.mean(axis=0) + epsilon
+    marginal_distribution_true = accuracy_matrix.mean(axis=1) + epsilon
+    joint_distribution = np.dot(np.expand_dims(marginal_distribution_true, axis=1), np.expand_dims(marginal_distribution_pred, axis=0))
+
+    accuracy_ratio_matrix = accuracy_matrix / joint_distribution
+
+    optimal_order = accuracy_ratio_matrix.idxmax(axis=1)
+
+    return optimal_order
+
 
 def _get_array_score(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails) -> FhirScore:
     """Calculate FhirScore of fhir_pred_array in that particular order
@@ -284,7 +342,10 @@ def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
     Returns:
         FhirComparison: comparison with fhirscore attribute calculated.
     """
-    resource_type = get_resource_type(diff.fhir_true, diff.resource_name)
+    if diff.fhir_true:
+        resource_type = get_resource_type(diff.fhir_true, diff.resource_name)
+    else:
+        resource_type = get_resource_type(diff.fhir_pred, diff.resource_name)
 
     if fhirtype_is_leaf(resource_type):
         diff.score = compare_leaf(diff)
@@ -305,7 +366,7 @@ def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
         ):
             continue
         if (
-            element_is_absent(diff.fhir_true[element_details.key]) and element_is_absent(diff.fhir_true[element_details.key])
+            element_is_absent(diff.fhir_true[element_details.key]) and element_is_absent(diff.fhir_pred[element_details.key])
         ):
             continue
 
@@ -325,6 +386,10 @@ def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
         elif element_details.is_leaf:
             _expand_diff_tree_leaf(diff, element_details)
             childscore = diff.children[element_details.key].score
+
+        else:
+            childscore = FhirScore()
+            warnings.warn(f"Details of element {element_details} could not be determined. \n fhir true: {diff.fhir_true} \n fhir pred: {diff.fhir_pred}")
 
         # Add the child node score to the current score
         diff.score = diff.score + childscore
@@ -460,7 +525,7 @@ def compare_leaf(diff: FhirDiff) -> FhirScore:
         fhirscore = FhirScore()
     elif element_is_absent(element_pred):
         fhirscore = FhirScore(n_deletions=1, n_leaves=1)  # miss
-    elif element_is_absent(element_pred):
+    elif element_is_absent(element_true):
         fhirscore = FhirScore(n_additions=1, n_leaves=1)  # hallucination
     elif element_true != element_pred:
         fhirscore = FhirScore(n_modifications=1, n_leaves=1)  # mistake
