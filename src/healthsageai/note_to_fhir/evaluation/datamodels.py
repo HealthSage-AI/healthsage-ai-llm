@@ -17,6 +17,20 @@ from pydantic import BaseModel, computed_field, field_validator, Field
 from typing import Any, Optional
 from collections import defaultdict
 
+class FhirValiditionScore(BaseModel):
+    n_nodes: int = 0
+    n_valid_nodes: int = 0
+    n_invalid_nodes: int = 0
+    self_is_valid: Optional[bool] = None
+
+    @computed_field
+    @property
+    def validation_score(self) -> float:
+        if self.n_nodes == 0:
+            return None
+        else:
+            return self.n_valid_nodes / self.n_nodes
+
 
 class FhirScore(BaseModel):
     n_leaves: int = 0  # The number of leaf nodes in this object
@@ -24,7 +38,6 @@ class FhirScore(BaseModel):
     n_deletions: int = 0  #  n of missing leaf nodes, a.k.a. "False Negatives"
     n_modifications: int = 0  # n of changes leaf nodes a.k.a. "Mistakes"
     n_matches: int = 0  # n of identical leaf nodes, a.k.a. "True Positives"
-    is_valid: Optional[bool] = None
 
     @computed_field
     @property
@@ -58,7 +71,6 @@ class FhirScore(BaseModel):
             n_deletions=self.n_deletions + other.n_deletions,
             n_modifications=self.n_modifications + other.n_modifications,
             n_matches=self.n_matches + other.n_matches,
-            is_valid=None,
         )
 
     def __radd__(self, other: Any):
