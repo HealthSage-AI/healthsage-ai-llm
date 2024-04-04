@@ -27,13 +27,13 @@ from fhir.resources.R4B.codeableconcept import CodeableConcept
 from fhir.resources.R4B.coding import Coding
 from fhir.resources.R4B.humanname import HumanName
 from fhir.resources.R4B.contactpoint import ContactPoint
-from fhir.resources.R4B.encounter import Encounter, EncounterParticipant
+from fhir.resources.R4B.encounter import Encounter, EncounterParticipant, EncounterHospitalization, EncounterLocation, EncounterDiagnosis
 from fhir.resources.R4B.allergyintolerance import AllergyIntolerance, AllergyIntoleranceReaction
 from fhir.resources.R4B.period import Period
 from fhir.resources.R4B.narrative import Narrative
 from fhir.resources.R4B.identifier import Identifier
 from fhir.resources.R4B.bundle import Bundle, BundleEntry
-from fhir.resources.R4B.organization import Organization
+from fhir.resources.R4B.organization import Organization, OrganizationContact
 from fhir.resources.R4B.practitioner import Practitioner
 from fhir.resources.R4B.procedure import Procedure, ProcedurePerformer
 from fhir.resources.R4B.condition import Condition
@@ -42,6 +42,7 @@ from fhir.resources.R4B.observation import Observation, ObservationComponent
 from fhir.resources.R4B.medication import Medication
 from fhir.resources.R4B.quantity import Quantity
 from fhir.resources.R4B.resource import Resource
+from fhir.resources.R4B.extension import Extension
 
 object_mapping = {
     "Patient": Patient,
@@ -74,5 +75,10 @@ object_mapping = {
     "AllergyIntoleranceReaction": AllergyIntoleranceReaction,
     "ProcedurePerformer": ProcedurePerformer,
     "ImmunizationProtocolApplied": ImmunizationProtocolApplied,
-    "ObservationComponent": ObservationComponent
+    "ObservationComponent": ObservationComponent,
+    "EncounterHospitalization": EncounterHospitalization,
+    "EncounterLocation": EncounterLocation,
+    "OrganizationContact": OrganizationContact,
+    "EncounterDiagnosis": EncounterDiagnosis,
+    "Extension": Extension,
 }

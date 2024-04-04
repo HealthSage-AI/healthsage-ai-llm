@@ -38,7 +38,7 @@ def drop_snomed_loinc(d):
             dd[k] = [drop_snomed_loinc(vv) if isinstance(vv, dict) else vv
                             for vv in v]
         elif k == 'coding' and isinstance(v, list):
-            dd[k] = [drop_code(code) if "snomed" in code["system"] or "loinc" in code["system"] else code for code in v]
+            dd[k] = [drop_code(code) if "snomed" in code.get("system","") or "loinc" in code.get("system","") else code for code in v]
         else:
             dd[k] = v
             

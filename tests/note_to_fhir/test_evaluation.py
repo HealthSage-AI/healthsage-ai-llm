@@ -72,6 +72,64 @@ def test_fhirdiff_edge_case() -> FhirDiff:
             'code': 'kg/m2'}}
     get_diff(fhir_true, fhir_pred, resource_type="Procedure")
 
+def test_fhirdiff_edge_case_2() -> FhirDiff:
+    fhir_pred = {'resourceType': 'Bundle',
+    'id': '1',
+    'type': 'collection',
+    'entry': [{'resource': {'resourceType': 'Patient',
+        'id': '1',
+        'name': [{'use': 'official',
+        'family': 'Cruickshank',
+        'given': ['Jordon', 'Elbert'],
+        'prefix': ['Mr.']}],
+        'telecom': [{'system': 'phone', 'value': '555-505-9461', 'use': 'home'}],
+        'gender': 'male',
+        'multipleBirthBoolean': False}},
+    {'resource': {'resourceType': 'Procedure',
+        'id': '3',
+        'status': 'unknown',
+        'subject': {'reference': 'Patient/1'}}},
+    {'resource': {'resourceType': 'Procedure',
+        'id': '2',
+        'status': 'unknown',
+        'code': {'coding': [{'system': 'http://snomed.info/sct',
+        'display': 'Electrocardiographic procedure (procedure)'}],
+        'text': 'Electrocardiographic procedure (procedure)'},
+        'subject': {'reference': 'Patient/1'}}},
+    {'resource': {'resourceType': 'Procedure',
+        'id': '1',
+        'status': 'unknown',
+        'subject': {'reference': 'Patient/1'}}},
+    {'resource': {'resourceType': 'Procedure',
+        'id': '4',
+        'status': 'unknown',
+        'subject': {'reference': 'Patient/1'}}}]}
+    
+    fhir_true = {'resourceType': 'Bundle',
+        'id': '1',
+        'type': 'collection',
+        'entry': [{'resource': {'resourceType': 'Patient',
+            'id': '1',
+            'name': [{'use': 'official',
+            'family': 'Cruickshank',
+            'given': ['Jordon', 'Elbert'],
+            'prefix': ['Mr.']}],
+            'telecom': [{'system': 'phone', 'value': '555-505-9461', 'use': 'home'}],
+            'gender': 'male',
+            'multipleBirthBoolean': False}},
+        {'resource': {'resourceType': 'Procedure',
+            'id': '1',
+            'status': 'unknown',
+            'code': {'coding': [{'system': 'http://snomed.info/sct',
+            'display': 'Electrocardiogram (procedure)'}],
+            'text': 'Electrocardiogram (procedure)'},
+            'subject': {'reference': 'Patient/1'}}},
+        None,
+        None,
+        None]}
+    
+    diff = get_diff(fhir_true, fhir_pred, resource_type="Bundle")
+
 
 def test_diff_to_list():
     diff = test_fhirdiff()
@@ -86,6 +144,7 @@ def test_diff_to_dataframe():
 
 
 if __name__ == "__main__":
+    test_fhirdiff_edge_case_2()
     test_fhirdiff_edge_case()
     test_fhirdiff()
     test_fhirdiff_encounter()
