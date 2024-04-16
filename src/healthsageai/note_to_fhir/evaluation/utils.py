@@ -23,8 +23,9 @@ from pydantic.v1.main import ModelMetaclass
 import pandas as pd
 import itertools
 import numpy as np
+from scipy.special import softmax
 
-MAX_PERMUTATIONS_ARRAY_SIZE = 5  # When all permutations have to be calculated
+MAX_PERMUTATIONS_ARRAY_SIZE = 7  # When all permutations have to be calculated
 
 
 def get_resource_details(Resource) -> List[ElementDetails]:
@@ -51,10 +52,10 @@ def get_resource_details(Resource) -> List[ElementDetails]:
             False if "element_required" not in spec.keys() else spec["element_required"]
         )
 
-        fhirtype = spec["type"]
+        fhirtype = spec.get("format",spec.get("type"))
         array_item_type = None
         if fhirtype == "array":
-            array_item_type = spec["items"]["type"]
+            array_item_type = spec["items"].get("format",spec['items'].get("type"))
 
         element_details = ElementDetails(
             key=name,
@@ -82,6 +83,10 @@ def match_list_len(list_1: list, list_2: list) -> tuple:
     """
     list_1 = list_1 if list_1 else []
     list_2 = list_2 if list_2 else []
+
+    list_1 = [i for i in list_1 if i is not None]  # Clear None
+    list_2 = [i for i in list_2 if i is not None]  #
+
     len_1 = len(list_1)
     len_2 = len(list_2)
     max_len = max(len_1, len_2)
@@ -147,7 +152,7 @@ def fhirtype_is_leaf(fhirtype) -> bool:
     Returns:
         bool: True if fhirtype is leaf, False otherwise
     """
-    return fhirtype in ["boolean", "integer", "string", "decimal", "number"]
+    return fhirtype in ["boolean", "integer", "string", "decimal", "number", "date-time", "date"]
 
 
 def map_align_arrays(arr1, arr2):
@@ -189,6 +194,25 @@ def optimize_array_order_exact(fhir_true_array: list, fhir_pred_array: list, ele
     fhir_pred_child_max = fhir_pred_child_permutations[max_idx]
     return fhir_true_array, fhir_pred_child_max
 
+def are_same_types(a, b):
+    if isinstance(a, dict) and isinstance(b, dict):
+        type_a, type_b = a.get("resourceType", ""), b.get("resourceType", "")
+        # For Bundle-Entries, take the resourcetype of the entry.
+        if type_a == "" and type_b == "" and "entry" in a.keys() and "entry" in b.keys():
+            type_a, type_b = a['entry'].get("resourceType", ""), b['entry'].get("resourceType", "")
+        same_type = type_a == type_b
+        return same_type
+    elif isinstance(a, list) and isinstance(b, list):
+        return True
+    elif isinstance(a, str) and isinstance(b, str):
+        return True
+    elif (isinstance(a, float) or isinstance(a, int)) and (isinstance(b, float) or isinstance(b, int)):
+        return True
+    else:
+        return False
+    
+
+
 def optimize_array_order_approx(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails) -> tuple:
     """Finds the list order for fhir_pred the results in the highest accuracy using argmax with penalties
 
@@ -203,40 +227,49 @@ def optimize_array_order_approx(fhir_true_array: list, fhir_pred_array: list, el
     accuracy_matrix = pd.DataFrame(0., index=np.arange(len(fhir_true_array)), columns=np.arange(len(fhir_pred_array)))
     for i_true, fhir_true in enumerate(fhir_true_array):
         for i_pred, fhir_pred in enumerate(fhir_pred_array):
-            diff = FhirDiff(
-            fhir_true=fhir_true,
-            fhir_pred=fhir_pred,
-            resource_name=element_details.array_item_type,
-            parent=None,
-            key=element_details.key,
-            )
-            diff = _expand_diff_tree(diff)
-            accuracy_matrix.iloc[i_true, i_pred] = diff.score.accuracy
+            if not are_same_types(fhir_true, fhir_pred):
+                accuracy_matrix.iloc[i_true, i_pred] = -1.
+            else:
+                diff = FhirDiff(
+                fhir_true=fhir_true,
+                fhir_pred=fhir_pred,
+                resource_name=element_details.array_item_type,
+                parent=None,
+                key=element_details.key,
+                )
+                diff = _expand_diff_tree(diff)
+                accuracy_matrix.iloc[i_true, i_pred] = diff.score.accuracy
 
     optimal_order = get_optimal_order(accuracy_matrix)
-    fhir_pred_array_max = []
-    for target_idx in optimal_order:
-        fhir_pred_array_max.append(fhir_pred_array[target_idx])
+
+    # Initialize
+    fhir_pred_array_max = [x for x in range(len(optimal_order))]
+
+    # Align each item with its best matching ground truth item
+    for pred_idx, true_idx in optimal_order.items():
+        fhir_pred_array_max[true_idx] = fhir_pred_array[pred_idx]
 
     return fhir_true_array, fhir_pred_array_max
 
 
-def get_optimal_order(accuracy_matrix):
+def get_optimal_order(accuracy_matrix) -> dict:
     """
 
     Args:
         matrix (_type_): _description_
     """
-    epsilon = 0.01
-    marginal_distribution_pred = accuracy_matrix.mean(axis=0) + epsilon
-    marginal_distribution_true = accuracy_matrix.mean(axis=1) + epsilon
-    joint_distribution = np.dot(np.expand_dims(marginal_distribution_true, axis=1), np.expand_dims(marginal_distribution_pred, axis=0))
-
-    accuracy_ratio_matrix = accuracy_matrix / joint_distribution
-
-    optimal_order = accuracy_ratio_matrix.idxmax(axis=1)
+    optimal_order = {}  # pred idx : true idx
+    while accuracy_matrix.shape[0] > 0:
+        max_col, max_idx = _get_max_loc(accuracy_matrix)
+        optimal_order[max_col] = max_idx
+        del accuracy_matrix[max_col]
+        accuracy_matrix.drop(max_idx, inplace=True)
 
     return optimal_order
+
+def _get_max_loc(df: pd.DataFrame) -> tuple:
+    return df.unstack().idxmax()
+
 
 
 def _get_array_score(fhir_true_array: list, fhir_pred_array: list, element_details: ElementDetails) -> FhirScore:
@@ -356,6 +389,8 @@ def _expand_diff_tree(diff: FhirDiff) -> FhirDiff:
     )
     resource_details = get_resource_details(Resource)  # list of ElementDetails
 
+    if not (isinstance(diff.fhir_pred, dict) or diff.fhir_pred is None):
+        diff.fhir_pred = {"illegal fhirtype": diff.fhir_pred}
 
 
     for element_details in resource_details:
@@ -445,7 +480,7 @@ def _expand_diff_tree_array(diff: FhirDiff, element_details: ElementDetails):
         diff (FhirDiff): _description_
         element_details (ElementDetails): _description_
     """
-    if not isinstance(diff.fhir_pred[element_details.key], list):
+    if not isinstance(diff.fhir_pred.get(element_details.key, None), list):
         diff.fhir_pred[element_details.key] = []
     diff.children[element_details.key] = []
     fhir_true_child, fhir_pred_child = diff.fhir_true[element_details.key], diff.fhir_pred[element_details.key]
@@ -521,6 +556,8 @@ def compare_leaf(diff: FhirDiff) -> FhirScore:
         return FhirScore()
     if diff.key == "reference":
         element_true, element_pred = remove_id_from_reference(element_true), remove_id_from_reference(element_pred)
+    if diff.resource_type == "date-time" and isinstance(element_true, str) and isinstance(element_pred, str):
+        element_true, element_pred = element_true[:16], element_pred[:16]
     if element_is_absent(element_pred) and element_is_absent(element_true):
         fhirscore = FhirScore()
     elif element_is_absent(element_pred):
