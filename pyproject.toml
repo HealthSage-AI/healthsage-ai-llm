@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "healthsageai"
-version = "0.1.6"
+version = "0.1.7"
 description = "HealthSage AI LLMs, Healthcare genAI platform"
 readme = "README.md"
 
