@@ -2,7 +2,7 @@
 
 ## Introduction
 
-HealthSage AI's LLM's are fine-tuned versions of LLama-13b and Mixtral-8x7b to create structured information - FHIR Resources - from unstructured clinical notes - plain text.
+HealthSage AI's LLM's are fine-tuned versions of LLama-13b (our first release) and Mixtral-8x7b (our second and newest release) to create structured information - FHIR Resources - from unstructured clinical notes - plain text.
 
 The model is optimized to process English and/or Dutch notes and populate 10 FHIR resource types. For a full description of the scope and limitations, see the performance and limitations header below. 
 
@@ -104,9 +104,9 @@ We are continuously training our model and will make updates available - that ad
 ### Furthermore, please note:
 - **No Relative dates:** HealthSage AI Note-to-FHIR will not provide accurate FHIR datetime fields based on text that contains relative time information like "today" or "yesterday". Furthermore, relative dates like "Patient John Doe is 50 years old." will not result in an accurate birthdate estimation, since the precise birthday and -month is unknown, and since the LLM is not aware of the current date. 
 - **Designed as Patient-centric:** HealthSage AI Note-to-FHIR is trained on notes describing one patient each. 
-- **<4k Context window:** The training data for this application contained at most 4096 tokens. Technically the model supports of to 32k tokens.
+- **<4k Context window:** The training data for this application contained at most 4k tokens. Technically the Mixtral-based Note-to-FHIR-8x7b model supports up to 32k tokens, whereas the LLama-2-based Note-to-Fhir-13b model supports up to 4k tokens.
 - **Explicit Null:** If a certain FHIR element is not present in the provided text, it is explictely predicted as NULL. Explictely modeling the absence of information reduces the chance of hallucinations. 
-- **Major European languages:** We've seen encouraging results on German, French, Spanish and Italian. However, these are not trained and tested on fully.
+- **Major European languages:** On Note-to-FHIR 8x7b, we've seen encouraging results on German, French, Spanish and Italian. However, these are not trained and tested on fully.
 - **Uses Bundles:** For consistency and simplicity, all predicted FHIR resources are transaction Bundles.
 - **Conservative estimates:** Our model is designed to stick to the information explicitely provided in the text. 
 - **ID's are local:** ID fields and references are local enumerations (1,2,3, etc.). They are not yet tested on referential correctness. 
