@@ -33,7 +33,7 @@ model = NoteToFhir13b()
 model.translate("Patient John Doe lives in Amsterdam")
 ```
 
-To run our second beta model, based on LLama-8x7b:
+To run our second beta model, based on Mixtral-8x7b:
 ```python
 model = NoteToFhir8x7b()
 model.translate("Patient Sofie de Jong woont in Amsterdam")
