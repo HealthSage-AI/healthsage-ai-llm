@@ -2,10 +2,9 @@
 
 ## Introduction
 
-HealthSage AI's LLM is a fine-tuned version of Meta's Llama 2 13B to create structured information - FHIR Resources - from
-unstructured clinical notes - plain text.
+HealthSage AI's LLM's are fine-tuned versions of LLama-13b and Mixtral-8x7b to create structured information - FHIR Resources - from unstructured clinical notes - plain text.
 
-The model is optimized to process English notes and populate 10 FHIR resource types. For a full description of the scope and limitations, see the performance and limitations header below. 
+The model is optimized to process English and/or Dutch notes and populate 10 FHIR resource types. For a full description of the scope and limitations, see the performance and limitations header below. 
 
 ## Getting started
 
@@ -25,10 +24,19 @@ The easiest way to get started is to run one of the Jupyter Notebooks on Google 
 You can do Note-to-fhir inference using our NoteToFhir class:
 
 ```python
-from healthsageai.note_to_fhir.inference import NoteToFhir13b
+from healthsageai.note_to_fhir.inference import NoteToFhir13b, NoteToFhir8x7b
+```
 
+To run our first beta model, based on LLama-13b:
+```python
 model = NoteToFhir13b()
 model.translate("Patient John Doe lives in Amsterdam")
+```
+
+To run our second beta model, based on LLama-8x7b:
+```python
+model = NoteToFhir8x7b()
+model.translate("Patient Sofie de Jong woont in Amsterdam")
 ```
 
 
@@ -84,7 +92,7 @@ This open sourced Beta model is trained within the following scope:
   9. AllergyIntolerance
   10. Procedure. 
 - English language
-
+- Dutch language (8x7b version only)
 
 ### The following features are out of scope of the current release:
 - Support for Coding systems such as SNOMED CT and Loinc.
@@ -96,10 +104,12 @@ We are continuously training our model and will make updates available - that ad
 ### Furthermore, please note:
 - **No Relative dates:** HealthSage AI Note-to-FHIR will not provide accurate FHIR datetime fields based on text that contains relative time information like "today" or "yesterday". Furthermore, relative dates like "Patient John Doe is 50 years old." will not result in an accurate birthdate estimation, since the precise birthday and -month is unknown, and since the LLM is not aware of the current date. 
 - **Designed as Patient-centric:** HealthSage AI Note-to-FHIR is trained on notes describing one patient each. 
-- **<4k Context window:** The training data for this application contained at most 3686 tokens, which is 90% of the context window for Llama-2 (4096)
+- **<4k Context window:** The training data for this application contained at most 4096 tokens. Technically the model supports of to 32k tokens.
 - **Explicit Null:** If a certain FHIR element is not present in the provided text, it is explictely predicted as NULL. Explictely modeling the absence of information reduces the chance of hallucinations. 
-- **Uses Bundles:** For consistency and simplicity, all predicted FHIR resources are Bundled.
+- **Major European languages:** We've seen encouraging results on German, French, Spanish and Italian. However, these are not trained and tested on fully.
+- **Uses Bundles:** For consistency and simplicity, all predicted FHIR resources are transaction Bundles.
 - **Conservative estimates:** Our model is designed to stick to the information explicitely provided in the text. 
 - **ID's are local:** ID fields and references are local enumerations (1,2,3, etc.). They are not yet tested on referential correctness. 
 - **Generation design:** The model is designed to generate a seperate resource if there is information about that resource in the text beyond what can be described in reference fields of related resources.
 - **Test results:** Our preliminary results suggest that HealthSage AI Note-to-FHIR is superior to the GPT-4 foundation model within the scope of our application in terms of FHIR Syntax and ability to replicate the original FHIR resources in our test dataset. We are currently analyzing our model on its performance for out-of-distribution data and out-of-scope data.
+- **Evaluation of datetime:** Datetime values are evaluation up to the minute level, since second and sub-second timing is typically not reported in clinical notes. For applications where second or sub-second timing is relevant, we advise changing this in your evaluation.
